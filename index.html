@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Italiano per l'allenamento</title>
+<meta name="theme-color" content="#fcfcfb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Italiano">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --accent: #2a78d6;
+    --accent-deep: #1c5cab;
+    --accent-soft: #cde2fb;
+    --good: #0ca30c;
+    --good-text: #006300;
+    --warn: #ec835a;
+    --it-green: #008300;
+    --it-red: #e34948;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--hairline);
+    padding: 28px 0 0;
+  }
+  .tricolore { display: flex; height: 4px; }
+  .tricolore span { flex: 1; }
+  .tricolore span:nth-child(1) { background: var(--it-green); }
+  .tricolore span:nth-child(2) { background: #fcfcfb; border-top: 1px solid var(--hairline); }
+  .tricolore span:nth-child(3) { background: var(--it-red); }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .subtitle { color: var(--ink-2); font-size: 14.5px; margin-top: 6px; }
+
+  /* Stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 22px 0; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .tile .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .tile .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  .tile .sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+
+  /* Tabs */
+  nav.tabs { display: flex; gap: 6px; padding-bottom: 0; margin-top: 4px; }
+  nav.tabs button {
+    font: inherit; font-size: 14.5px; font-weight: 600; color: var(--ink-2);
+    background: none; border: none; border-bottom: 3px solid transparent;
+    padding: 10px 14px 12px; cursor: pointer; border-radius: 6px 6px 0 0;
+  }
+  nav.tabs button:hover { background: rgba(11,11,11,0.04); }
+  nav.tabs button.active { color: var(--ink); border-bottom-color: var(--accent); }
+
+  main { padding-top: 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Category cards (overview) */
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .cat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .cat-card:hover { box-shadow: 0 4px 14px rgba(11,11,11,0.08); transform: translateY(-1px); }
+  .cat-head { display: flex; align-items: center; gap: 10px; }
+  .cat-icon { font-size: 22px; }
+  .cat-name { font-weight: 600; font-size: 15px; }
+  .cat-count { font-size: 12.5px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .bar { height: 8px; background: #efeeea; border-radius: 4px; margin-top: 12px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.4s ease; }
+  .bar .fill.done { background: var(--good); }
+  .cat-status { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+
+  /* Word list (category detail) */
+  .detail-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .back-btn {
+    font: inherit; font-size: 13.5px; font-weight: 600; color: var(--accent-deep);
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 12px; cursor: pointer;
+  }
+  .back-btn:hover { background: var(--accent-soft); }
+  .detail-title { font-size: 19px; font-weight: 700; }
+  .word-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .word-table th {
+    text-align: left; font-size: 12px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.05em; padding: 10px 14px; border-bottom: 1px solid var(--hairline);
+    background: #f6f5f2;
+  }
+  .word-table td { padding: 10px 14px; border-bottom: 1px solid var(--hairline); font-size: 14.5px; vertical-align: top; }
+  .word-table tr:last-child td { border-bottom: none; }
+  .word-table .it { font-weight: 600; }
+  .word-table .pr { color: var(--muted); font-size: 13px; }
+  .word-table .note { color: var(--ink-2); font-size: 13px; }
+  .word-table .known-dot { color: var(--good); font-weight: 700; }
+  .table-scroll { overflow-x: auto; border-radius: 12px; }
+
+  /* Selects & buttons */
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  select {
+    font: inherit; font-size: 14px; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer;
+  }
+  .btn {
+    font: inherit; font-size: 14.5px; font-weight: 600; padding: 10px 18px;
+    border-radius: 10px; border: 1px solid var(--border); cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .btn:hover { background: #f2f1ed; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-deep); }
+  .btn.good { background: var(--good); border-color: var(--good); color: #fff; }
+  .btn.good:hover { filter: brightness(0.92); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+
+  /* Flashcards */
+  .fc-stage { max-width: 560px; margin: 0 auto; text-align: center; }
+  .fc-progress { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .fc-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    min-height: 240px; display: flex; flex-direction: column; justify-content: center;
+    align-items: center; padding: 32px 28px; cursor: pointer; user-select: none;
+    box-shadow: 0 2px 10px rgba(11,11,11,0.05); position: relative;
+  }
+  .fc-lang {
+    position: absolute; top: 14px; left: 16px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
+  }
+  .fc-word { font-size: 28px; font-weight: 700; line-height: 1.25; }
+  .fc-pron { font-size: 15px; color: var(--muted); margin-top: 10px; }
+  .fc-note { font-size: 13.5px; color: var(--ink-2); margin-top: 14px; max-width: 420px; }
+  .fc-hint { font-size: 12.5px; color: var(--muted); margin-top: 18px; }
+  .fc-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+  .fc-done-msg { font-size: 16px; color: var(--ink-2); padding: 30px 0; line-height: 1.6; }
+
+  /* Quiz */
+  .quiz-stage { max-width: 620px; margin: 0 auto; }
+  .quiz-q {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 24px; margin-bottom: 14px;
+  }
+  .quiz-count { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .quiz-prompt { font-size: 20px; font-weight: 700; }
+  .quiz-sub { font-size: 13.5px; color: var(--ink-2); margin-top: 4px; }
+  .quiz-opts { display: grid; gap: 10px; margin-top: 16px; }
+  .quiz-opt {
+    font: inherit; font-size: 15.5px; text-align: left; padding: 13px 16px;
+    border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface);
+    cursor: pointer; font-weight: 500;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--accent); background: #f4f8fe; }
+  .quiz-opt.correct { border-color: var(--good); background: #eef8ee; color: var(--good-text); font-weight: 700; }
+  .quiz-opt.wrong { border-color: var(--it-red); background: #fdf0f0; }
+  .quiz-opt:disabled { cursor: default; }
+  .quiz-feedback { margin-top: 14px; font-size: 14.5px; min-height: 22px; }
+  .quiz-feedback .ok { color: var(--good-text); font-weight: 600; }
+  .quiz-feedback .no { color: #b02a2a; font-weight: 600; }
+  .quiz-next-row { margin-top: 12px; text-align: right; }
+  .quiz-result { text-align: center; padding: 30px 20px; }
+  .quiz-result .big { font-size: 44px; font-weight: 700; }
+  .quiz-result .msg { font-size: 16px; color: var(--ink-2); margin-top: 8px; }
+
+  .section-note {
+    font-size: 13px; color: var(--muted); margin-top: 26px; text-align: center; line-height: 1.5;
+  }
+  h2.view-title { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  p.view-sub { font-size: 14px; color: var(--ink-2); margin-bottom: 18px; }
+  .reset-btn {
+    font: inherit; font-size: 12.5px; color: var(--muted); background: none;
+    border: none; text-decoration: underline; cursor: pointer; margin-top: 6px;
+  }
+
+  /* Mobile (iPhone) */
+  @media (max-width: 600px) {
+    header { padding-top: calc(16px + env(safe-area-inset-top)); }
+    h1 { font-size: 21px; }
+    .subtitle { font-size: 13.5px; }
+    .tiles { gap: 8px; margin: 16px 0; }
+    .tile { padding: 10px 12px; }
+    .tile .value { font-size: 21px; }
+    .tile .label { font-size: 10.5px; }
+    .tile .sub { font-size: 11px; }
+    nav.tabs { gap: 0; }
+    nav.tabs button { padding: 10px 10px 12px; font-size: 14px; }
+    .fc-word { font-size: 23px; }
+    .fc-card { min-height: 210px; padding: 26px 20px; }
+    .quiz-prompt { font-size: 18px; }
+    .word-table td, .word-table th { padding: 8px 10px; font-size: 13.5px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Italiano per l'allenamento 🛼</h1>
+    <div class="subtitle">Dein Italienisch fürs Rollentraining — Kommandos, Korrekturen, Fachbegriffe und Alltag. Auf dem Weg zur EM in Ponte di Legno.</div>
+    <div class="tiles">
+      <div class="tile"><div class="label">Vokabeln</div><div class="value" id="statTotal">0</div><div class="sub">in 6 Kategorien</div></div>
+      <div class="tile"><div class="label">Gelernt</div><div class="value" id="statKnown">0</div><div class="sub" id="statKnownSub">diese Sitzung</div></div>
+      <div class="tile"><div class="label">Quiz-Quote</div><div class="value" id="statQuiz">–</div><div class="sub" id="statQuizSub">noch kein Quiz</div></div>
+    </div>
+    <nav class="tabs">
+      <button data-view="overview" class="active">Übersicht</button>
+      <button data-view="cards">Karteikarten</button>
+      <button data-view="quiz">Quiz</button>
+    </nav>
+  </div>
+  <div class="tricolore"><span></span><span></span><span></span></div>
+</header>
+
+<main class="wrap">
+
+  <!-- ÜBERSICHT -->
+  <section class="view active" id="view-overview">
+    <div id="ov-grid-wrap">
+      <h2 class="view-title">Kategorien</h2>
+      <p class="view-sub">Klick auf eine Kategorie, um alle Wörter zu sehen. Der Fortschritt füllt sich, wenn du Karteikarten mit „Wusste ich“ markierst.</p>
+      <div class="cat-grid" id="catGrid"></div>
+    </div>
+    <div id="ov-detail" style="display:none">
+      <div class="detail-head">
+        <button class="back-btn" onclick="showOverviewGrid()">← Zurück</button>
+        <div class="detail-title" id="detailTitle"></div>
+      </div>
+      <div class="table-scroll">
+        <table class="word-table">
+          <thead><tr><th></th><th>Deutsch</th><th>Italienisch</th><th>Aussprache</th><th>Hinweis</th></tr></thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="section-note">Betonung in der Aussprachehilfe: GROSSE Silbe = betont. „dsch“ wie in „Dschungel“, „tsch“ wie in „Tschüss“.</p>
+  </section>
+
+  <!-- KARTEIKARTEN -->
+  <section class="view" id="view-cards">
+    <h2 class="view-title">Karteikarten</h2>
+    <p class="view-sub">Deutsch → Italienisch. Karte anklicken zum Umdrehen. „Nochmal“ legt die Karte wieder hinten in den Stapel.</p>
+    <div class="controls">
+      <label for="fcCat" style="font-size:14px;color:var(--ink-2)">Kategorie:</label>
+      <select id="fcCat"></select>
+      <button class="btn primary" onclick="startFlashcards()">Stapel starten</button>
+    </div>
+    <div class="fc-stage" id="fcStage" style="display:none">
+      <div class="fc-progress" id="fcProgress"></div>
+      <div class="fc-card" id="fcCard" onclick="flipCard()">
+        <div class="fc-lang" id="fcLang">Deutsch</div>
+        <div class="fc-word" id="fcWord"></div>
+        <div class="fc-pron" id="fcPron"></div>
+        <div class="fc-note" id="fcNote"></div>
+        <div class="fc-hint" id="fcHint">Klicken zum Umdrehen</div>
+      </div>
+      <div class="fc-actions" id="fcActions" style="visibility:hidden">
+        <button class="btn" onclick="fcAgain()">↻ Nochmal</button>
+        <button class="btn good" onclick="fcKnown()">✓ Wusste ich</button>
+      </div>
+    </div>
+    <div class="fc-stage" id="fcDone" style="display:none">
+      <div class="fc-card" style="cursor:default">
+        <div class="fc-word">Bravissimo! 🎉</div>
+        <div class="fc-done-msg" id="fcDoneMsg"></div>
+        <button class="btn primary" onclick="startFlashcards()">Neuer Durchgang</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="view" id="view-quiz">
+    <h2 class="view-title">Quiz</h2>
+    <p class="view-sub">10 Fragen, Deutsch → Italienisch, vier Antwortmöglichkeiten.</p>
+    <div class="controls">
+      <label for="qzCat" style="font-size:14px;color:var(--ink-2)">Kategorie:</label>
+      <select id="qzCat"></select>
+      <button class="btn primary" onclick="startQuiz()">Quiz starten</button>
+    </div>
+    <div class="quiz-stage" id="qzStage" style="display:none">
+      <div class="quiz-q">
+        <div class="quiz-count" id="qzCount"></div>
+        <div class="quiz-prompt" id="qzPrompt"></div>
+        <div class="quiz-sub">Wie heißt das auf Italienisch?</div>
+        <div class="quiz-opts" id="qzOpts"></div>
+        <div class="quiz-feedback" id="qzFeedback"></div>
+        <div class="quiz-next-row"><button class="btn" id="qzNext" onclick="quizNext()" disabled>Weiter →</button></div>
+      </div>
+    </div>
+    <div class="quiz-stage" id="qzResult" style="display:none">
+      <div class="quiz-q quiz-result">
+        <div class="big" id="qzScore"></div>
+        <div class="msg" id="qzMsg"></div>
+        <div style="margin-top:18px"><button class="btn primary" onclick="startQuiz()">Noch ein Quiz</button></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<p class="section-note wrap">Dein Fortschritt wird auf diesem Gerät gespeichert und bleibt auch nach dem Schließen erhalten. In bocca al lupo! 🐺<br>
+<button class="reset-btn" onclick="resetProgress()">Fortschritt zurücksetzen</button></p>
+
+<script>
+// ---------------- DATEN ----------------
+const CATS = [
+  {
+    id: "kommandos", icon: "📣", name: "Kommandos & Ablauf",
+    words: [
+      {de:"Los! / Auf geht's!", it:"Vai! / Dai!", pr:"wai / dai", note:"„Dai!“ ist das italienische „Komm schon!“ — hörst du im Training ständig"},
+      {de:"Noch einmal!", it:"Ancora una volta!", pr:"an-KO-ra U-na WOL-ta", note:"kurz auch nur: „Ancora!“"},
+      {de:"Nochmal von vorne", it:"Di nuovo dall'inizio", pr:"di NUO-wo dall-i-NI-tsio"},
+      {de:"Stopp! / Halt!", it:"Ferma! / Stop!", pr:"FER-ma"},
+      {de:"Langsam / langsamer", it:"Piano / più piano", pr:"PIA-no / pju PIA-no"},
+      {de:"Schneller!", it:"Più veloce!", pr:"pju we-LO-tsche"},
+      {de:"Pause", it:"Pausa", pr:"PAU-sa"},
+      {de:"Weiter!", it:"Avanti! / Continua!", pr:"a-WAN-ti / kon-TI-nua"},
+      {de:"Schau mich an / Schau her", it:"Guardami", pr:"GUAR-da-mi"},
+      {de:"Hör zu / Hört zu", it:"Ascolta / Ascoltate", pr:"as-KOL-ta / as-kol-TA-te", note:"-ate = Mehrzahl (an beide/alle)"},
+      {de:"Konzentrier dich", it:"Concentrati", pr:"kon-TSCHEN-tra-ti"},
+      {de:"Zusammen!", it:"Insieme!", pr:"in-SJE-me", note:"wichtig im Paarlauf: synchron!"},
+      {de:"Bereit?", it:"Pronti?", pr:"PRON-ti", note:"an das Paar / mehrere; einzeln: Pronto? (m) / Pronta? (w)"},
+      {de:"Jetzt!", it:"Adesso! / Ora!", pr:"a-DES-so / O-ra"},
+      {de:"Warte / Wartet", it:"Aspetta / Aspettate", pr:"as-PET-ta / as-pet-TA-te"},
+      {de:"Probier es / Probiert es", it:"Prova / Provate", pr:"PRO-wa / pro-WA-te"},
+      {de:"Letztes Mal / letzter Versuch", it:"Ultima volta", pr:"UL-ti-ma WOL-ta"},
+      {de:"Einlaufen / Aufwärmen", it:"Riscaldamento", pr:"ris-kal-da-MEN-to", note:"„Fate il riscaldamento“ = lauft euch ein"},
+      {de:"Fertig / Das war's", it:"Finito / Basta così", pr:"fi-NI-to / BAS-ta ko-SI"}
+    ]
+  },
+  {
+    id: "lob", icon: "👏", name: "Lob & Feedback",
+    words: [
+      {de:"Gut!", it:"Bene!", pr:"BE-ne"},
+      {de:"Sehr gut!", it:"Molto bene! / Benissimo!", pr:"MOL-to BE-ne / be-NIS-si-mo"},
+      {de:"Bravo! (an das Paar)", it:"Bravi! / Bravissimi!", pr:"BRA-wi / bra-WIS-si-mi", note:"einzeln: Brava! (w) / Bravo! (m)"},
+      {de:"Perfekt!", it:"Perfetto!", pr:"per-FET-to"},
+      {de:"Fast! / Beinahe!", it:"Quasi!", pr:"KUA-si"},
+      {de:"(Viel) besser!", it:"(Molto) meglio!", pr:"MOL-to MEL-jo"},
+      {de:"Nicht schlecht", it:"Non male", pr:"non MA-le"},
+      {de:"Genau so! / So ist es richtig", it:"Così! Giusto!", pr:"ko-SI DSCHUS-to"},
+      {de:"Nicht so / So nicht", it:"Non così", pr:"non ko-SI"},
+      {de:"Noch nicht", it:"Non ancora", pr:"non an-KO-ra"},
+      {de:"Ihr könnt das besser", it:"Potete fare meglio", pr:"po-TE-te FA-re MEL-jo"},
+      {de:"Nur Mut! / Trau dich!", it:"Coraggio!", pr:"ko-RAD-dscho"},
+      {de:"Keine Angst", it:"Niente paura", pr:"NJEN-te pa-U-ra"},
+      {de:"Ganz ruhig / mit Ruhe", it:"Tranquilli / Con calma", pr:"tran-KUIL-li / kon KAL-ma"},
+      {de:"Alles gut?", it:"Tutto bene?", pr:"TUT-to BE-ne"},
+      {de:"Tut es weh?", it:"Fa male?", pr:"fa MA-le", note:"„Ti sei fatto male?“ = Hast du dir wehgetan?"}
+    ]
+  },
+  {
+    id: "korrekturen", icon: "🧍", name: "Korrekturen: Körper & Haltung",
+    words: [
+      {de:"Knie beugen!", it:"Piega le ginocchia!", pr:"PJE-ga le dschi-NOK-kja"},
+      {de:"Rücken gerade!", it:"Schiena dritta!", pr:"SKJE-na DRIT-ta", note:"„sch“ im Italienischen = „sk“!"},
+      {de:"Kopf hoch!", it:"Testa alta!", pr:"TES-ta AL-ta"},
+      {de:"Arme gestreckt!", it:"Braccia tese!", pr:"BRAT-tscha TE-se", note:"auch: „Stendi le braccia“ = streck die Arme"},
+      {de:"Schultern runter / locker", it:"Spalle giù", pr:"SPAL-le DSCHU"},
+      {de:"Bauch rein / Körperspannung!", it:"Pancia in dentro!", pr:"PAN-tscha in DEN-tro"},
+      {de:"Fußspitze strecken!", it:"Punta tesa!", pr:"PUN-ta TE-sa"},
+      {de:"Freies Bein", it:"Gamba libera", pr:"GAM-ba LI-be-ra"},
+      {de:"Standbein", it:"Gamba d'appoggio", pr:"GAM-ba dap-POD-dscho"},
+      {de:"Gewicht nach vorne", it:"Peso avanti", pr:"PE-so a-WAN-ti"},
+      {de:"Gleichgewicht", it:"Equilibrio", pr:"e-kui-LI-brio"},
+      {de:"Höher!", it:"Più alto!", pr:"pju AL-to"},
+      {de:"Tiefer!", it:"Più basso!", pr:"pju BAS-so"},
+      {de:"Fest halten!", it:"Tieni forte!", pr:"TJE-ni FOR-te"},
+      {de:"Abdrücken! / Druck!", it:"Spingi!", pr:"SPIN-dschi"},
+      {de:"Halte die Position", it:"Tieni la posizione", pr:"TJE-ni la po-si-TSIO-ne"},
+      {de:"Schneller schließen (Rotation)", it:"Chiudi più veloce", pr:"KJU-di pju we-LO-tsche"},
+      {de:"Landung", it:"Atterraggio", pr:"at-ter-RAD-dscho", note:"„Tieni l'atterraggio“ = Landung halten/ausfahren"},
+      {de:"Einfahrt (in ein Element)", it:"Entrata", pr:"en-TRA-ta"},
+      {de:"Ausfahrt", it:"Uscita", pr:"u-SCHI-ta"}
+    ]
+  },
+  {
+    id: "elemente", icon: "🛼", name: "Elemente & Fachbegriffe",
+    words: [
+      {de:"Sprung", it:"Salto", pr:"SAL-to"},
+      {de:"Pirouette", it:"Trottola", pr:"TROT-to-la"},
+      {de:"Standpirouette", it:"Trottola verticale", pr:"TROT-to-la wer-ti-KA-le"},
+      {de:"Sitzpirouette", it:"Trottola bassa", pr:"TROT-to-la BAS-sa"},
+      {de:"Libelle (Waagepirouette)", it:"Trottola ad angelo", pr:"TROT-to-la ad AN-dsche-lo"},
+      {de:"Paarlaufpirouette", it:"Trottola in coppia", pr:"TROT-to-la in KOP-pja"},
+      {de:"Todesspirale", it:"Spirale della morte", pr:"spi-RA-le DEL-la MOR-te"},
+      {de:"Hebung", it:"Sollevamento", pr:"sol-le-wa-MEN-to"},
+      {de:"Geworfener Sprung (z. B. geworfener Axel)", it:"Salto lanciato (Axel lanciato)", pr:"SAL-to lan-TSCHA-to"},
+      {de:"Schrittfolge", it:"Sequenza di passi", pr:"se-KUEN-tsa di PAS-si"},
+      {de:"Kurzkür", it:"Programma corto (disco corto)", pr:"pro-GRAM-ma KOR-to"},
+      {de:"Kür", it:"Programma lungo (disco lungo)", pr:"pro-GRAM-ma LUN-go"},
+      {de:"Programmdurchlauf", it:"Prova del programma", pr:"PRO-wa del pro-GRAM-ma"},
+      {de:"Kombination", it:"Combinazione", pr:"kom-bi-na-TSIO-ne"},
+      {de:"Doppelter / dreifacher (Sprung)", it:"Doppio / triplo", pr:"DOP-pjo / TRI-plo", note:"z. B. „doppio Salchow“"},
+      {de:"Rittberger", it:"Loop", pr:"lup", note:"Sprungnamen (Axel, Salchow, Flip, Lutz, Toeloop) sind international — nur der Rittberger heißt „Loop“"},
+      {de:"Waage / Arabesque", it:"Angelo", pr:"AN-dsche-lo"},
+      {de:"Ausfallschritt", it:"Affondo", pr:"af-FON-do"},
+      {de:"Drehung / Rotation", it:"Rotazione / giro", pr:"ro-ta-TSIO-ne / DSCHI-ro"},
+      {de:"Kante (innen/außen)", it:"Filo (interno / esterno)", pr:"FI-lo in-TER-no / es-TER-no"},
+      {de:"Vorwärts / rückwärts", it:"Avanti / indietro", pr:"a-WAN-ti / in-DJE-tro"},
+      {de:"Übergang", it:"Transizione", pr:"tran-si-TSIO-ne"},
+      {de:"Musik (mit Musik)", it:"Musica (con la musica)", pr:"MU-si-ka"}
+    ]
+  },
+  {
+    id: "orga", icon: "🕐", name: "Zahlen, Zeit & Organisation",
+    words: [
+      {de:"eins, zwei, drei", it:"uno, due, tre", pr:"U-no, DU-e, tre"},
+      {de:"vier, fünf, sechs", it:"quattro, cinque, sei", pr:"KUAT-tro, TSCHIN-kue, sei"},
+      {de:"sieben, acht, neun, zehn", it:"sette, otto, nove, dieci", pr:"SET-te, OT-to, NO-we, DJE-tschi"},
+      {de:"heute / morgen / heute Abend", it:"oggi / domani / stasera", pr:"OD-dschi / do-MA-ni / sta-SE-ra"},
+      {de:"Training", it:"Allenamento", pr:"al-le-na-MEN-to"},
+      {de:"Trainingsfläche / Bahn", it:"Pista", pr:"PIS-ta"},
+      {de:"Rollschuhe", it:"Pattini (a rotelle)", pr:"PAT-ti-ni a ro-TEL-le"},
+      {de:"Rollen", it:"Ruote", pr:"RUO-te"},
+      {de:"Trainer / Trainerin", it:"Allenatore / allenatrice", pr:"al-le-na-TO-re / al-le-na-TRI-tsche"},
+      {de:"Wettkampf", it:"Gara", pr:"GA-ra"},
+      {de:"Privatlektion", it:"Lezione privata", pr:"le-TSIO-ne pri-WA-ta"},
+      {de:"Wertungsrichter", it:"Giudice / giudici", pr:"DSCHU-di-tsche / DSCHU-di-tschi"},
+      {de:"Um wie viel Uhr?", it:"A che ora?", pr:"a ke O-ra"},
+      {de:"Fünf Minuten Pause", it:"Cinque minuti di pausa", pr:"TSCHIN-kue mi-NU-ti di PAU-sa"},
+      {de:"Wir fangen an", it:"Cominciamo", pr:"ko-min-TSCHA-mo"},
+      {de:"Wir sind fertig", it:"Abbiamo finito", pr:"ab-BJA-mo fi-NI-to"},
+      {de:"vorher / nachher", it:"prima / dopo", pr:"PRI-ma / DO-po"},
+      {de:"Sturz / stürzen", it:"Caduta / cadere", pr:"ka-DU-ta / ka-DE-re", note:"„È caduta“ = sie ist gestürzt"},
+      {de:"Trinkt Wasser!", it:"Bevete acqua!", pr:"be-WE-te A-kua"}
+    ]
+  },
+  {
+    id: "alltag", icon: "☕", name: "Alltag & Smalltalk",
+    words: [
+      {de:"Hallo / Tschüss", it:"Ciao", pr:"tschau"},
+      {de:"Guten Morgen / Guten Tag", it:"Buongiorno", pr:"buon-DSCHOR-no"},
+      {de:"Guten Abend", it:"Buonasera", pr:"buo-na-SE-ra"},
+      {de:"Gute Nacht", it:"Buonanotte", pr:"buo-na-NOT-te"},
+      {de:"Wie geht's?", it:"Come stai?", pr:"KO-me stai"},
+      {de:"Gut, danke. Und dir?", it:"Bene, grazie. E tu?", pr:"BE-ne GRA-tsje, e tu"},
+      {de:"Danke (vielmals)", it:"Grazie (mille)", pr:"GRA-tsje MIL-le"},
+      {de:"Gern geschehen", it:"Prego", pr:"PRE-go"},
+      {de:"Bitte (bei einer Bitte)", it:"Per favore", pr:"per fa-WO-re"},
+      {de:"Entschuldigung", it:"Scusa / Scusami", pr:"SKU-sa / SKU-sa-mi"},
+      {de:"Freut mich (Kennenlernen)", it:"Piacere", pr:"pja-TSCHE-re"},
+      {de:"Willkommen!", it:"Benvenuta!", pr:"ben-we-NU-ta", note:"an eine Frau; an einen Mann: Benvenuto!"},
+      {de:"Wie war die Reise?", it:"Com'è andato il viaggio?", pr:"ko-ME an-DA-to il WJAD-dscho"},
+      {de:"Möchtest du einen Kaffee?", it:"Vuoi un caffè?", pr:"wuoi un kaf-FE"},
+      {de:"Gehen wir essen!", it:"Andiamo a mangiare!", pr:"an-DJA-mo a man-DSCHA-re"},
+      {de:"Das schmeckt sehr gut", it:"È buonissimo", pr:"e buo-NIS-si-mo"},
+      {de:"Die Rechnung, bitte", it:"Il conto, per favore", pr:"il KON-to per fa-WO-re"},
+      {de:"Wo ist …?", it:"Dov'è …?", pr:"do-WE"},
+      {de:"Bis später / bis morgen", it:"A dopo / a domani", pr:"a DO-po / a do-MA-ni"},
+      {de:"Gute Reise!", it:"Buon viaggio!", pr:"buon WJAD-dscho"},
+      {de:"Ich verstehe nicht", it:"Non capisco", pr:"non ka-PIS-ko"},
+      {de:"Langsamer, bitte", it:"Più piano, per favore", pr:"pju PIA-no per fa-WO-re"},
+      {de:"Wie sagt man … auf Italienisch?", it:"Come si dice … in italiano?", pr:"KO-me si DI-tsche"},
+      {de:"Ich lerne Italienisch", it:"Sto imparando l'italiano", pr:"sto im-pa-RAN-do li-ta-LJA-no"}
+    ]
+  }
+];
+
+// ---------------- STATE (auf dem Gerät gespeichert) ----------------
+const LS_KEY = "italiano-allenamento-v1";
+const known = new Set();          // "catId:index"
+let quizStats = { asked: 0, correct: 0 };
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (s) {
+      (s.known || []).forEach(k => known.add(k));
+      if (s.quizStats) quizStats = s.quizStats;
+    }
+  } catch (e) { /* Speicherung nicht verfügbar — App läuft trotzdem */ }
+}
+function saveState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ known: [...known], quizStats }));
+  } catch (e) { /* ignorieren */ }
+}
+function resetProgress() {
+  if (!confirm("Gesamten Fortschritt zurücksetzen?")) return;
+  known.clear();
+  quizStats = { asked: 0, correct: 0 };
+  try { localStorage.removeItem(LS_KEY); } catch (e) {}
+  $("statQuiz").textContent = "–";
+  $("statQuizSub").textContent = "noch kein Quiz";
+  renderOverview();
+}
+
+const $ = id => document.getElementById(id);
+const totalWords = CATS.reduce((n, c) => n + c.words.length, 0);
+
+function shuffle(a) {
+  const arr = a.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ---------------- TABS ----------------
+document.querySelectorAll("nav.tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    $("view-" + btn.dataset.view).classList.add("active");
+    if (btn.dataset.view === "overview") renderOverview();
+  });
+});
+
+// ---------------- STATS ----------------
+function renderStats() {
+  $("statTotal").textContent = totalWords;
+  $("statKnown").textContent = known.size;
+  $("statKnownSub").textContent = known.size === totalWords ? "alle! 🎉" : "gespeichert";
+  if (quizStats.asked > 0) {
+    $("statQuiz").textContent = Math.round(100 * quizStats.correct / quizStats.asked) + "%";
+    $("statQuizSub").textContent = quizStats.correct + " von " + quizStats.asked + " richtig";
+  }
+}
+
+// ---------------- ÜBERSICHT ----------------
+function renderOverview() {
+  renderStats();
+  const grid = $("catGrid");
+  grid.innerHTML = "";
+  CATS.forEach(cat => {
+    const learned = cat.words.filter((_, i) => known.has(cat.id + ":" + i)).length;
+    const pct = Math.round(100 * learned / cat.words.length);
+    const card = document.createElement("div");
+    card.className = "cat-card";
+    card.innerHTML =
+      '<div class="cat-head"><span class="cat-icon">' + cat.icon + '</span>' +
+      '<span class="cat-name">' + cat.name + '</span>' +
+      '<span class="cat-count">' + cat.words.length + ' Wörter</span></div>' +
+      '<div class="bar"><div class="fill' + (pct === 100 ? ' done' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="cat-status">' + learned + ' von ' + cat.words.length + ' gelernt (' + pct + '%)</div>';
+    card.addEventListener("click", () => showCatDetail(cat.id));
+    grid.appendChild(card);
+  });
+}
+
+function showCatDetail(catId) {
+  const cat = CATS.find(c => c.id === catId);
+  $("ov-grid-wrap").style.display = "none";
+  $("ov-detail").style.display = "block";
+  $("detailTitle").textContent = cat.icon + " " + cat.name;
+  const body = $("detailBody");
+  body.innerHTML = "";
+  cat.words.forEach((w, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td>' + (known.has(cat.id + ":" + i) ? '<span class="known-dot">✓</span>' : '') + '</td>' +
+      '<td>' + w.de + '</td>' +
+      '<td class="it">' + w.it + '</td>' +
+      '<td class="pr">' + (w.pr || "") + '</td>' +
+      '<td class="note">' + (w.note || "") + '</td>';
+    body.appendChild(tr);
+  });
+}
+
+function showOverviewGrid() {
+  $("ov-detail").style.display = "none";
+  $("ov-grid-wrap").style.display = "block";
+  renderOverview();
+}
+
+// ---------------- SELECTS ----------------
+function fillCatSelects() {
+  [$("fcCat"), $("qzCat")].forEach(sel => {
+    sel.innerHTML = '<option value="all">Alle Kategorien</option>';
+    CATS.forEach(c => {
+      const o = document.createElement("option");
+      o.value = c.id;
+      o.textContent = c.icon + " " + c.name;
+      sel.appendChild(o);
+    });
+  });
+}
+
+function poolFor(catId) {
+  const cats = catId === "all" ? CATS : CATS.filter(c => c.id === catId);
+  const pool = [];
+  cats.forEach(c => c.words.forEach((w, i) => pool.push({ ...w, key: c.id + ":" + i })));
+  return pool;
+}
+
+// ---------------- KARTEIKARTEN ----------------
+let fcQueue = [], fcCurrent = null, fcFlipped = false, fcDoneCount = 0, fcStartCount = 0;
+
+function startFlashcards() {
+  fcQueue = shuffle(poolFor($("fcCat").value));
+  fcStartCount = fcQueue.length;
+  fcDoneCount = 0;
+  $("fcDone").style.display = "none";
+  $("fcStage").style.display = "block";
+  nextCard();
+}
+
+function nextCard() {
+  if (fcQueue.length === 0) {
+    $("fcStage").style.display = "none";
+    $("fcDone").style.display = "block";
+    $("fcDoneMsg").textContent = "Stapel geschafft — " + fcStartCount + " Karten durchgearbeitet.";
+    renderStats();
+    return;
+  }
+  fcCurrent = fcQueue.shift();
+  fcFlipped = false;
+  $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten im Stapel · " + fcDoneCount + " geschafft";
+  $("fcLang").textContent = "Deutsch";
+  $("fcWord").textContent = fcCurrent.de;
+  $("fcPron").textContent = "";
+  $("fcNote").textContent = "";
+  $("fcHint").textContent = "Klicken zum Umdrehen";
+  $("fcActions").style.visibility = "hidden";
+}
+
+function flipCard() {
+  if (!fcCurrent) return;
+  fcFlipped = !fcFlipped;
+  if (fcFlipped) {
+    $("fcLang").textContent = "Italienisch";
+    $("fcWord").textContent = fcCurrent.it;
+    $("fcPron").textContent = fcCurrent.pr ? "[" + fcCurrent.pr + "]" : "";
+    $("fcNote").textContent = fcCurrent.note || "";
+    $("fcHint").textContent = "";
+    $("fcActions").style.visibility = "visible";
+  } else {
+    $("fcLang").textContent = "Deutsch";
+    $("fcWord").textContent = fcCurrent.de;
+    $("fcPron").textContent = "";
+    $("fcNote").textContent = "";
+    $("fcHint").textContent = "Klicken zum Umdrehen";
+    $("fcActions").style.visibility = "hidden";
+  }
+}
+
+function fcKnown() {
+  known.add(fcCurrent.key);
+  saveState();
+  fcDoneCount++;
+  renderStats();
+  nextCard();
+}
+
+function fcAgain() {
+  fcQueue.push(fcCurrent);   // wieder hinten einreihen
+  nextCard();
+}
+
+// ---------------- QUIZ ----------------
+let qzQuestions = [], qzIndex = 0, qzCorrect = 0, qzAnswered = false;
+
+function startQuiz() {
+  const pool = poolFor($("qzCat").value);
+  const n = Math.min(10, pool.length);
+  qzQuestions = shuffle(pool).slice(0, n).map(w => {
+    const distractors = shuffle(pool.filter(x => x.key !== w.key)).slice(0, 3);
+    return { word: w, options: shuffle([w, ...distractors]) };
+  });
+  qzIndex = 0;
+  qzCorrect = 0;
+  $("qzResult").style.display = "none";
+  $("qzStage").style.display = "block";
+  renderQuestion();
+}
+
+function renderQuestion() {
+  qzAnswered = false;
+  const q = qzQuestions[qzIndex];
+  $("qzCount").textContent = "Frage " + (qzIndex + 1) + " von " + qzQuestions.length;
+  $("qzPrompt").textContent = q.word.de;
+  $("qzFeedback").innerHTML = "";
+  $("qzNext").disabled = true;
+  $("qzNext").textContent = qzIndex === qzQuestions.length - 1 ? "Ergebnis →" : "Weiter →";
+  const opts = $("qzOpts");
+  opts.innerHTML = "";
+  q.options.forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "quiz-opt";
+    b.textContent = opt.it;
+    b.addEventListener("click", () => answer(b, opt, q));
+    opts.appendChild(b);
+  });
+}
+
+function answer(btn, opt, q) {
+  if (qzAnswered) return;
+  qzAnswered = true;
+  quizStats.asked++;
+  const correct = opt.key === q.word.key;
+  document.querySelectorAll(".quiz-opt").forEach(b => {
+    b.disabled = true;
+    if (b.textContent === q.word.it) b.classList.add("correct");
+  });
+  if (correct) {
+    qzCorrect++;
+    quizStats.correct++;
+    $("qzFeedback").innerHTML = '<span class="ok">✓ Richtig!</span>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
+  } else {
+    btn.classList.add("wrong");
+    $("qzFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + q.word.it + '</strong>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
+  }
+  $("qzNext").disabled = false;
+  saveState();
+  renderStats();
+}
+
+function quizNext() {
+  qzIndex++;
+  if (qzIndex >= qzQuestions.length) {
+    $("qzStage").style.display = "none";
+    $("qzResult").style.display = "block";
+    $("qzScore").textContent = qzCorrect + " / " + qzQuestions.length;
+    const pct = qzCorrect / qzQuestions.length;
+    $("qzMsg").textContent =
+      pct === 1 ? "Perfetto! Sei bravissimo! 🏆" :
+      pct >= 0.8 ? "Molto bene! Fast alles richtig." :
+      pct >= 0.5 ? "Bene — dranbleiben, das wird!" :
+      "Ancora una volta — nimm die Karteikarten zur Hilfe!";
+  } else {
+    renderQuestion();
+  }
+}
+
+// ---------------- INIT ----------------
+loadState();
+fillCatSelects();
+renderOverview();
+if (quizStats.asked > 0) renderStats();
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
