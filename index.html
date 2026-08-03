@@ -221,7 +221,7 @@
     <h1>Italiano per l'allenamento 🛼</h1>
     <div class="subtitle">Dein Italienisch fürs Rollentraining — Kommandos, Korrekturen, Fachbegriffe und Alltag. Auf dem Weg zur EM in Ponte di Legno.</div>
     <div class="tiles">
-      <div class="tile"><div class="label">Vokabeln</div><div class="value" id="statTotal">0</div><div class="sub">in 6 Kategorien</div></div>
+      <div class="tile"><div class="label">Vokabeln</div><div class="value" id="statTotal">0</div><div class="sub" id="statTotalSub">Kategorien</div></div>
       <div class="tile"><div class="label">Gelernt</div><div class="value" id="statKnown">0</div><div class="sub" id="statKnownSub">diese Sitzung</div></div>
       <div class="tile"><div class="label">Quiz-Quote</div><div class="value" id="statQuiz">–</div><div class="sub" id="statQuizSub">noch kein Quiz</div></div>
     </div>
@@ -347,7 +347,12 @@ const CATS = [
       {de:"Probier es / Probiert es", it:"Prova / Provate", pr:"PRO-wa / pro-WA-te"},
       {de:"Letztes Mal / letzter Versuch", it:"Ultima volta", pr:"UL-ti-ma WOL-ta"},
       {de:"Einlaufen / Aufwärmen", it:"Riscaldamento", pr:"ris-kal-da-MEN-to", note:"„Fate il riscaldamento“ = lauft euch ein"},
-      {de:"Fertig / Das war's", it:"Finito / Basta così", pr:"fi-NI-to / BAS-ta ko-SI"}
+      {de:"Fertig / Das war's", it:"Finito / Basta così", pr:"fi-NI-to / BAS-ta ko-SI"},
+      {de:"Macht weiter!", it:"Continuate!", pr:"kon-ti-nu-A-te"},
+      {de:"Kommt her! / Alle herkommen!", it:"Venite qui!", pr:"we-NI-te KUI"},
+      {de:"Wechselt! (Übung/Seite)", it:"Cambiate!", pr:"kam-BJA-te"},
+      {de:"Ab hier / von hier", it:"Da qui", pr:"da KUI"},
+      {de:"Noch dreimal", it:"Ancora tre volte", pr:"an-KO-ra tre WOL-te"}
     ]
   },
   {
@@ -368,7 +373,13 @@ const CATS = [
       {de:"Keine Angst", it:"Niente paura", pr:"NJEN-te pa-U-ra"},
       {de:"Ganz ruhig / mit Ruhe", it:"Tranquilli / Con calma", pr:"tran-KUIL-li / kon KAL-ma"},
       {de:"Alles gut?", it:"Tutto bene?", pr:"TUT-to BE-ne"},
-      {de:"Tut es weh?", it:"Fa male?", pr:"fa MA-le", note:"„Ti sei fatto male?“ = Hast du dir wehgetan?"}
+      {de:"Tut es weh?", it:"Fa male?", pr:"fa MA-le", note:"„Ti sei fatto male?“ = Hast du dir wehgetan?"},
+      {de:"Viel besser als gestern", it:"Molto meglio di ieri", pr:"MOL-to MEL-jo di JE-ri"},
+      {de:"Ich bin stolz auf euch", it:"Sono fiero di voi", pr:"SO-no FJE-ro di woi", note:"als Frau: „Sono fiera di voi“"},
+      {de:"Ihr wart heute super", it:"Oggi siete stati bravissimi", pr:"OD-dschi SJE-te STA-ti bra-WIS-si-mi"},
+      {de:"Weiter so!", it:"Continuate così!", pr:"kon-ti-nu-A-te ko-SI"},
+      {de:"Nicht aufgeben!", it:"Non mollare!", pr:"non mol-LA-re"},
+      {de:"Gut gemacht, Pause verdient", it:"Ben fatto, pausa meritata", pr:"ben FAT-to, PAU-sa me-ri-TA-ta"}
     ]
   },
   {
@@ -476,6 +487,165 @@ const CATS = [
       {de:"Wie sagt man … auf Italienisch?", it:"Come si dice … in italiano?", pr:"KO-me si DI-tsche"},
       {de:"Ich lerne Italienisch", it:"Sto imparando l'italiano", pr:"sto im-pa-RAN-do li-ta-LJA-no"}
     ]
+  },
+  {
+    id: "saetze", icon: "💬", name: "Gespräche im Training",
+    words: [
+      {de:"Heute üben wir die Kür", it:"Oggi proviamo il programma lungo", pr:"OD-dschi pro-WJA-mo il pro-GRAM-ma LUN-go"},
+      {de:"Zuerst einlaufen, dann die Sprünge", it:"Prima riscaldamento, poi i salti", pr:"PRI-ma ris-kal-da-MEN-to, poi i SAL-ti"},
+      {de:"Wir beginnen mit den Pirouetten", it:"Cominciamo con le trottole", pr:"ko-min-TSCHA-mo kon le TROT-to-le"},
+      {de:"Der Sprung war zu tief", it:"Il salto era troppo basso", pr:"il SAL-to E-ra TROP-po BAS-so"},
+      {de:"Die Landung war wackelig", it:"L'atterraggio era instabile", pr:"lat-ter-RAD-dscho E-ra in-STA-bi-le"},
+      {de:"Ihr seid nicht im Takt", it:"Siete fuori tempo", pr:"SJE-te FUO-ri TEM-po"},
+      {de:"Ihr seid nicht synchron", it:"Non siete sincronizzati", pr:"non SJE-te sin-kro-nid-DSA-ti"},
+      {de:"Mehr Tempo in der Einfahrt", it:"Più velocità nell'entrata", pr:"pju we-lo-tschi-TA nell-en-TRA-ta"},
+      {de:"Die Position länger halten", it:"Tieni la posizione più a lungo", pr:"TJE-ni la po-si-TSIO-ne pju a LUN-go"},
+      {de:"Noch einmal mit Musik", it:"Ancora una volta con la musica", pr:"an-KO-ra U-na WOL-ta kon la MU-si-ka"},
+      {de:"Machen wir eine kurze Pause", it:"Facciamo una piccola pausa", pr:"fat-TSCHA-mo U-na PIK-ko-la PAU-sa"},
+      {de:"Das reicht für heute", it:"Basta per oggi", pr:"BAS-ta per OD-dschi"},
+      {de:"Morgen zur gleichen Zeit", it:"Domani alla stessa ora", pr:"do-MA-ni AL-la STES-sa O-ra"},
+      {de:"Wir sehen uns um halb neun in der Halle", it:"Ci vediamo alle otto e mezza in pista", pr:"tschi we-DJA-mo AL-le OT-to e MED-dsa in PIS-ta"},
+      {de:"Das Training beginnt um acht", it:"L'allenamento comincia alle otto", pr:"lal-le-na-MEN-to ko-MIN-tscha AL-le OT-to"},
+      {de:"Sie hat Fortschritte gemacht", it:"Ha fatto progressi", pr:"a FAT-to pro-GRES-si"},
+      {de:"Das Element ist noch nicht sicher", it:"L'elemento non è ancora sicuro", pr:"le-le-MEN-to non e an-KO-ra si-KU-ro"},
+      {de:"Wir ändern die Reihenfolge", it:"Cambiamo l'ordine", pr:"kam-BJA-mo LOR-di-ne"},
+      {de:"Achtet auf die Arme", it:"Attenzione alle braccia", pr:"at-ten-TSIO-ne AL-le BRAT-tscha"},
+      {de:"Schaut euch das Video an", it:"Guardate il video", pr:"guar-DA-te il WI-deo"},
+      {de:"Was können wir verbessern?", it:"Cosa possiamo migliorare?", pr:"KO-sa pos-SJA-mo mil-jo-RA-re"},
+      {de:"Sehr gute Arbeit heute", it:"Ottimo lavoro oggi", pr:"OT-ti-mo la-WO-ro OD-dschi"}
+    ]
+  },
+  {
+    id: "bausteine", icon: "🧩", name: "Satzbausteine: können, wollen, müssen",
+    words: [
+      {de:"Ich möchte … (höflich)", it:"Vorrei …", pr:"wor-REI", note:"+ Grundform: „Vorrei provare“ = ich möchte probieren"},
+      {de:"Ich will", it:"Voglio", pr:"WOL-jo"},
+      {de:"Ich kann (nicht)", it:"(Non) posso", pr:"non POS-so"},
+      {de:"Kannst du …?", it:"Puoi …?", pr:"puoi"},
+      {de:"Können wir …?", it:"Possiamo …?", pr:"pos-SJA-mo"},
+      {de:"Ich muss", it:"Devo", pr:"DE-wo"},
+      {de:"Du musst", it:"Devi", pr:"DE-wi"},
+      {de:"Wir müssen", it:"Dobbiamo", pr:"dob-BJA-mo"},
+      {de:"Ich habe / wir haben", it:"Ho / abbiamo", pr:"o / ab-BJA-mo"},
+      {de:"Es gibt …", it:"C'è … / Ci sono …", pr:"tsche / tschi SO-no", note:"c'è = Einzahl, ci sono = Mehrzahl"},
+      {de:"Ich brauche …", it:"Ho bisogno di …", pr:"o bi-SON-jo di"},
+      {de:"Mir gefällt … / Ich mag …", it:"Mi piace …", pr:"mi PJA-tsche", note:"Mehrzahl: „mi piacciono“"},
+      {de:"Was machen wir?", it:"Cosa facciamo?", pr:"KO-sa fat-TSCHA-mo"},
+      {de:"Lass uns gehen / Wir gehen", it:"Andiamo", pr:"an-DJA-mo"},
+      {de:"Machen wir …? (Vorschlag)", it:"Facciamo …?", pr:"fat-TSCHA-mo", note:"„Facciamo una prova?“ = Machen wir einen Versuch?"},
+      {de:"Ich versuche es", it:"Ci provo", pr:"tschi PRO-wo"},
+      {de:"Ich weiß (nicht)", it:"(Non) lo so", pr:"non lo so"},
+      {de:"Ich verstehe / verstanden!", it:"Capisco / Ho capito!", pr:"ka-PIS-ko / o ka-PI-to"},
+      {de:"Ich denke / ich glaube", it:"Penso / credo", pr:"PEN-so / KRE-do"},
+      {de:"vielleicht", it:"forse / magari", pr:"FOR-se / ma-GA-ri"},
+      {de:"zuerst … dann …", it:"prima … poi …", pr:"PRI-ma … poi"},
+      {de:"zu viel / zu wenig", it:"troppo / troppo poco", pr:"TROP-po / TROP-po PO-ko"},
+      {de:"ein bisschen", it:"un po'", pr:"un PO"},
+      {de:"immer / nie / oft", it:"sempre / mai / spesso", pr:"SEM-pre / mai / SPES-so"},
+      {de:"heute nicht", it:"oggi no", pr:"OD-dschi no"},
+      {de:"alles / nichts", it:"tutto / niente", pr:"TUT-to / NJEN-te"}
+    ]
+  },
+  {
+    id: "fragen", icon: "❓", name: "Fragen stellen",
+    words: [
+      {de:"Wer?", it:"Chi?", pr:"ki"},
+      {de:"Was?", it:"Cosa? / Che cosa?", pr:"KO-sa"},
+      {de:"Wann?", it:"Quando?", pr:"KUAN-do"},
+      {de:"Wo? / Wohin?", it:"Dove?", pr:"DO-we"},
+      {de:"Warum?", it:"Perché?", pr:"per-KE", note:"heißt als Antwort auch „weil“!"},
+      {de:"Wie?", it:"Come?", pr:"KO-me"},
+      {de:"Wie viel? / Wie viele?", it:"Quanto? / Quanti?", pr:"KUAN-to / KUAN-ti"},
+      {de:"Welche(r)?", it:"Quale?", pr:"KUA-le"},
+      {de:"Wie lange?", it:"Quanto tempo?", pr:"KUAN-to TEM-po"},
+      {de:"Wann sehen wir uns?", it:"A che ora ci vediamo?", pr:"a ke O-ra tschi we-DJA-mo"},
+      {de:"Wo treffen wir uns?", it:"Dove ci vediamo?", pr:"DO-we tschi we-DJA-mo"},
+      {de:"Was meinst du?", it:"Cosa ne pensi?", pr:"KO-sa ne PEN-si"},
+      {de:"Geht das? / Passt das?", it:"Va bene?", pr:"wa BE-ne"},
+      {de:"Bist du müde?", it:"Sei stanca?", pr:"sei STAN-ka", note:"an einen Mann: „Sei stanco?“"},
+      {de:"Hast du Hunger? / Durst?", it:"Hai fame? / Hai sete?", pr:"ai FA-me / ai SE-te"},
+      {de:"Brauchst du etwas?", it:"Ti serve qualcosa?", pr:"ti SER-we kual-KO-sa"},
+      {de:"Wie läuft es?", it:"Come va?", pr:"KO-me wa"},
+      {de:"Was bedeutet das?", it:"Cosa significa?", pr:"KO-sa sin-JI-fi-ka"},
+      {de:"Kannst du das wiederholen?", it:"Puoi ripetere?", pr:"puoi ri-PE-te-re"},
+      {de:"Können wir das ändern?", it:"Possiamo cambiare?", pr:"pos-SJA-mo kam-BJA-re"}
+    ]
+  },
+  {
+    id: "meinung", icon: "💭", name: "Meinung & Befinden",
+    words: [
+      {de:"Ich bin müde", it:"Sono stanco", pr:"SO-no STAN-ko", note:"als Frau: „Sono stanca“"},
+      {de:"Ich bin zufrieden", it:"Sono contento", pr:"SO-no kon-TEN-to", note:"als Frau: „contenta“"},
+      {de:"Ich bin ein bisschen nervös", it:"Sono un po' nervoso", pr:"SO-no un PO ner-WO-so"},
+      {de:"Ich freue mich! / Wie schön!", it:"Che bello!", pr:"ke BEL-lo"},
+      {de:"Meiner Meinung nach …", it:"Secondo me …", pr:"se-KON-do me"},
+      {de:"Für mich ist das in Ordnung", it:"Per me va bene", pr:"per me wa BE-ne"},
+      {de:"Das ist schwierig / leicht", it:"È difficile / è facile", pr:"e dif-FI-tschi-le / e FA-tschi-le"},
+      {de:"Das ist wichtig", it:"È importante", pr:"e im-por-TAN-te"},
+      {de:"Kein Problem", it:"Non c'è problema", pr:"non tsche pro-BLE-ma"},
+      {de:"Einverstanden!", it:"D'accordo!", pr:"dak-KOR-do"},
+      {de:"Du hast recht", it:"Hai ragione", pr:"ai ra-DSCHO-ne"},
+      {de:"Ich bin (mir) nicht sicher", it:"Non sono sicuro", pr:"non SO-no si-KU-ro"},
+      {de:"Es war anstrengend", it:"È stato faticoso", pr:"e STA-to fa-ti-KO-so"},
+      {de:"Das macht Spaß", it:"È divertente", pr:"e di-wer-TEN-te"},
+      {de:"Schade!", it:"Peccato!", pr:"pek-KA-to"},
+      {de:"Zum Glück", it:"Per fortuna", pr:"per for-TU-na"},
+      {de:"Es ist heiß / kalt (Wetter)", it:"Fa caldo / fa freddo", pr:"fa KAL-do / fa FRED-do"},
+      {de:"besser / schlechter", it:"meglio / peggio", pr:"MEL-jo / PED-dscho"},
+      {de:"Ich hoffe es", it:"Lo spero", pr:"lo SPE-ro"}
+    ]
+  },
+  {
+    id: "floskeln", icon: "🗣️", name: "Floskeln & Gesprächs-Kleber",
+    words: [
+      {de:"Also … / Na dann …", it:"Allora …", pr:"al-LO-ra", note:"DAS italienische Füllwort — hörst du ständig"},
+      {de:"In Ordnung / OK", it:"Va bene", pr:"wa BE-ne"},
+      {de:"Klar! / Sicher!", it:"Certo!", pr:"TSCHER-to"},
+      {de:"Gerne! / Sehr gern!", it:"Volentieri!", pr:"wo-len-TJE-ri"},
+      {de:"Genau!", it:"Esatto!", pr:"e-SAT-to"},
+      {de:"Wirklich?", it:"Davvero?", pr:"dav-WE-ro"},
+      {de:"Mal sehen", it:"Vediamo", pr:"we-DJA-mo"},
+      {de:"Immer mit der Ruhe", it:"Con calma", pr:"kon KAL-ma"},
+      {de:"Auf geht's! / Los geht's!", it:"Andiamo! / Si parte!", pr:"an-DJA-mo / si PAR-te"},
+      {de:"Moment mal", it:"Un attimo", pr:"un AT-ti-mo"},
+      {de:"Sofort", it:"Subito", pr:"SU-bi-to"},
+      {de:"Vielleicht später", it:"Magari più tardi", pr:"ma-GA-ri pju TAR-di"},
+      {de:"Keine Ahnung", it:"Boh!", pr:"bo", note:"sehr umgangssprachlich — mit Schulterzucken"},
+      {de:"das heißt … / also …", it:"cioè …", pr:"tscho-E"},
+      {de:"Passt schon / So ist es gut", it:"Va bene così", pr:"wa BE-ne ko-SI"},
+      {de:"Wie bitte?", it:"Come, scusa?", pr:"KO-me SKU-sa"},
+      {de:"Macht nichts", it:"Non fa niente", pr:"non fa NJEN-te"},
+      {de:"Danke, gleichfalls", it:"Grazie, altrettanto", pr:"GRA-tsje al-tret-TAN-to"},
+      {de:"Viel Glück!", it:"In bocca al lupo!", pr:"in BOK-ka al LU-po", note:"wörtlich „in den Rachen des Wolfs“ — Antwort: „Crepi!“"},
+      {de:"Stimmt / Das ist wahr", it:"È vero", pr:"e WE-ro"}
+    ]
+  },
+  {
+    id: "reise", icon: "🍝", name: "Unterwegs, Essen & Hotel",
+    words: [
+      {de:"Ich habe Hunger / Durst", it:"Ho fame / ho sete", pr:"o FA-me / o SE-te"},
+      {de:"Einen Tisch für vier, bitte", it:"Un tavolo per quattro, per favore", pr:"un TA-wo-lo per KUAT-tro"},
+      {de:"Die Speisekarte, bitte", it:"Il menù, per favore", pr:"il me-NU"},
+      {de:"Was empfehlen Sie?", it:"Cosa consiglia?", pr:"KO-sa kon-SIL-ja"},
+      {de:"Ich nehme …", it:"Prendo …", pr:"PREN-do"},
+      {de:"Wasser (still / sprudelnd)", it:"Acqua naturale / frizzante", pr:"A-kua na-tu-RA-le / frid-DSAN-te"},
+      {de:"Frühstück", it:"La colazione", pr:"ko-la-TSIO-ne"},
+      {de:"Mittagessen / Abendessen", it:"Il pranzo / la cena", pr:"il PRAN-dso / la TSCHE-na"},
+      {de:"Sehr lecker!", it:"Buonissimo! / Che buono!", pr:"buo-NIS-si-mo / ke BUO-no"},
+      {de:"Wo ist die Toilette?", it:"Dov'è il bagno?", pr:"do-WE il BAN-jo"},
+      {de:"das Hotel / das Zimmer", it:"L'albergo / la camera", pr:"lal-BER-go / la KA-me-ra"},
+      {de:"der Schlüssel", it:"La chiave", pr:"la KJA-we"},
+      {de:"rechts / links / geradeaus", it:"A destra / a sinistra / dritto", pr:"a DES-tra / a si-NIS-tra / DRIT-to"},
+      {de:"Wie weit ist es?", it:"Quanto è lontano?", pr:"KUAN-to e lon-TA-no"},
+      {de:"zu Fuß / mit dem Auto", it:"A piedi / in macchina", pr:"a PJE-di / in MAK-ki-na"},
+      {de:"der Parkplatz", it:"Il parcheggio", pr:"il par-KED-dscho"},
+      {de:"Ich spreche nur wenig Italienisch", it:"Parlo solo un po' di italiano", pr:"PAR-lo SO-lo un PO di i-ta-LJA-no"},
+      {de:"Sprechen Sie Deutsch / Englisch?", it:"Parla tedesco / inglese?", pr:"PAR-la te-DES-ko / in-GLE-se"},
+      {de:"Können Sie mir helfen?", it:"Può aiutarmi?", pr:"puo aju-TAR-mi"},
+      {de:"die Apotheke / der Arzt", it:"La farmacia / il medico", pr:"la far-ma-TSCHI-a / il ME-di-ko"},
+      {de:"Wie viel kostet das?", it:"Quanto costa?", pr:"KUAN-to KOS-ta"},
+      {de:"Ich zahle / Ich lade dich ein", it:"Pago io / Offro io", pr:"PA-go I-o / OF-fro I-o", note:"„Offro io“ = ich lade ein — kommt in Italien gut an!"}
+    ]
   }
 ];
 
@@ -534,6 +704,7 @@ document.querySelectorAll("nav.tabs button").forEach(btn => {
 // ---------------- STATS ----------------
 function renderStats() {
   $("statTotal").textContent = totalWords;
+  $("statTotalSub").textContent = "in " + CATS.length + " Kategorien";
   $("statKnown").textContent = known.size;
   $("statKnownSub").textContent = known.size === totalWords ? "alle! 🎉" : "gespeichert";
   if (quizStats.asked > 0) {
