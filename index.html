@@ -220,6 +220,20 @@
   .fc-level { font-size: 13px; color: var(--ink-2); margin-top: 10px; min-height: 18px; }
   .fc-level .dots { color: var(--accent-deep); letter-spacing: 2px; font-size: 14px; margin-right: 6px; }
   .dots-sm { color: var(--accent-deep); font-size: 10px; letter-spacing: 1px; white-space: nowrap; }
+  .tok-bank { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tok-btn {
+    font: inherit; font-size: 15.5px; font-weight: 500; padding: 9px 14px;
+    border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer;
+  }
+  .tok-btn:hover:not(:disabled) { border-color: var(--accent); }
+  .tok-btn:disabled { opacity: 0.35; cursor: default; }
+  .fc-build {
+    min-height: 48px; border: 1.5px dashed var(--hairline); border-radius: 10px;
+    padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; align-items: center;
+  }
+  .fc-build .tok-btn { background: #f4f8fe; border-style: solid; border-color: var(--accent-soft); }
+  .fc-build.ok { border-color: var(--good); }
+  .fc-build.no { border-color: var(--it-red); }
   .word-table .it { cursor: pointer; }
   .starter-card { border: 1.5px solid var(--accent); }
 
@@ -322,7 +336,7 @@
   <!-- KARTEIKARTEN -->
   <section class="view" id="view-cards">
     <h2 class="view-title">Übungen</h2>
-    <p class="view-sub">Antwort antippen — jede Übung zählt für deinen Fortschritt. Richtig → die Vokabel steigt eine Stufe (Wiederholung nach 1 → 3 → 7 → 14 Tagen). Falsch → zurück auf Stufe 1, sie kommt gleich noch einmal.</p>
+    <p class="view-sub">Die Übungen wachsen mit: Neue Vokabeln übst du per Auswahl, ab Stufe 2 mit <b>Hörverstehen</b> 🔊, ab Stufe 3 als <b>Lückentext</b> ✏️ und ab Stufe 4 baust du den Satz selbst 🧱. Richtig → Stufe rauf (Wiederholung nach 1 → 3 → 7 → 14 Tagen), falsch → Stufe 1 und gleich nochmal.</p>
     <div class="today-box">
       <div class="ti"><b>🔥 Heute lernen</b><div class="sub2" id="todayInfo"></div></div>
       <button class="btn primary" onclick="startToday()">Los geht's</button>
@@ -339,10 +353,11 @@
         <div class="quiz-count" id="fcProgress"></div>
         <div style="display:flex;align-items:center;gap:10px"><div class="quiz-prompt" id="fcPrompt"></div><button class="speak-btn" id="fcSpeak" style="display:none" title="Anhören">🔊</button></div>
         <div class="quiz-sub" id="fcSub"></div>
+        <div class="fc-build" id="fcBuild" style="display:none"></div>
         <div class="quiz-opts" id="fcOpts"></div>
         <div class="quiz-feedback" id="fcFeedback"></div>
         <div class="fc-level" id="fcLevel"></div>
-        <div class="quiz-next-row"><button class="btn" id="fcNext" onclick="nextCard()" style="display:none">Weiter →</button></div>
+        <div class="quiz-next-row"><button class="btn primary" id="fcCheck" onclick="checkBuild()" style="display:none">Prüfen</button> <button class="btn" id="fcNext" onclick="nextCard()" style="display:none">Weiter →</button></div>
       </div>
     </div>
     <div class="fc-stage" id="fcDone" style="display:none">
@@ -1196,29 +1211,140 @@ function nextCard() {
   renderFcQuestion();
 }
 
+// --- Übungstypen: Leiter nach Lernstufe (Forschung: erst erkennen, dann hören, dann produzieren) ---
+function buildable(word) {
+  if (word.it.includes("/") || word.it.includes("…")) return null;
+  const toks = word.it.split(" ");
+  return (toks.length >= 3 && toks.length <= 8) ? toks : null;
+}
+function clozeable(word) {
+  if (word.it.includes("/") || word.it.includes("…")) return null;
+  const toks = word.it.split(" ");
+  if (toks.length < 3) return null;
+  let idx = -1, len = 0;
+  toks.forEach((t, i) => {
+    const w = t.replace(/[^A-Za-zÀ-ÿ']/g, "");
+    if (w.length > len) { len = w.length; idx = i; }
+  });
+  return len >= 3 ? { toks, idx } : null;
+}
+function pickType(word) {
+  const box = cards[word.key] ? cards[word.key].box : 0;
+  if (box <= 1) return "mc";
+  if (box === 2) return "hear";
+  if (box === 3) return clozeable(word) ? "cloze" : "hear";
+  return buildable(word) ? "build" : (clozeable(word) ? "cloze" : "hear");
+}
+const TYPE_LABEL = { mc: "Auswahl", hear: "Hören 🔊", cloze: "Lückentext ✏️", build: "Satzbau 🧱" };
+
+let fcType = "mc", fcBuildSel = [];
+
 function renderFcQuestion() {
-  const askIt = (dir === "itde");
-  $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten · " + fcRight + " richtig" + (fcWrong > 0 ? " · " + fcWrong + " nochmal" : "");
-  $("fcPrompt").textContent = askIt ? fcCurrent.it : fcCurrent.de;
-  $("fcSub").textContent = askIt ? "Was bedeutet das?" : "Wie heißt das auf Italienisch?";
-  const sp = $("fcSpeak");
-  sp.style.display = askIt ? "block" : "none";
-  sp.onclick = (ev) => playKey(fcCurrent.key, fcCurrent.it, ev);
-  if (askIt) playKey(fcCurrent.key, fcCurrent.it);
+  fcType = pickType(fcCurrent);
+  $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten · " + fcRight + " richtig" +
+    (fcWrong > 0 ? " · " + fcWrong + " nochmal" : "") + " · " + TYPE_LABEL[fcType];
   $("fcFeedback").innerHTML = "";
   $("fcLevel").innerHTML = "";
   $("fcNext").style.display = "none";
-  const distractors = shuffle(fcPool.filter(x => x.key !== fcCurrent.key)).slice(0, 3);
-  const options = shuffle([fcCurrent, ...distractors]);
+  $("fcCheck").style.display = "none";
+  const bd = $("fcBuild");
+  bd.style.display = "none"; bd.innerHTML = ""; bd.className = "fc-build";
+  const sp = $("fcSpeak");
+  sp.style.display = "none";
+  sp.onclick = (ev) => playKey(fcCurrent.key, fcCurrent.it, ev);
   const opts = $("fcOpts");
   opts.innerHTML = "";
-  options.forEach(opt => {
-    const b = document.createElement("button");
-    b.className = "quiz-opt";
-    b.textContent = askIt ? opt.de : opt.it;
-    b.addEventListener("click", () => answerFc(b, opt));
-    opts.appendChild(b);
+  opts.className = "quiz-opts";
+
+  if (fcType === "mc") {
+    const askIt = (dir === "itde");
+    $("fcPrompt").textContent = askIt ? fcCurrent.it : fcCurrent.de;
+    $("fcSub").textContent = askIt ? "Was bedeutet das?" : "Wie heißt das auf Italienisch?";
+    if (askIt) { sp.style.display = "block"; playKey(fcCurrent.key, fcCurrent.it); }
+    const distractors = shuffle(fcPool.filter(x => x.key !== fcCurrent.key)).slice(0, 3);
+    shuffle([fcCurrent, ...distractors]).forEach(opt => {
+      addChoice(opts, askIt ? opt.de : opt.it, opt.key === fcCurrent.key, askIt ? fcCurrent.de : fcCurrent.it);
+    });
+  } else if (fcType === "hear") {
+    $("fcPrompt").textContent = "Hör genau hin …";
+    $("fcSub").textContent = "Was bedeutet das? (🔊 zum Wiederholen)";
+    sp.style.display = "block";
+    playKey(fcCurrent.key, fcCurrent.it);
+    const distractors = shuffle(fcPool.filter(x => x.key !== fcCurrent.key)).slice(0, 3);
+    shuffle([fcCurrent, ...distractors]).forEach(opt => {
+      addChoice(opts, opt.de, opt.key === fcCurrent.key, fcCurrent.de);
+    });
+  } else if (fcType === "cloze") {
+    const c = clozeable(fcCurrent);
+    const answer = c.toks[c.idx];
+    $("fcPrompt").textContent = c.toks.map((t, i) => i === c.idx ? "____" : t).join(" ");
+    $("fcSub").textContent = "„" + fcCurrent.de + "“ — welches Wort fehlt?";
+    const seen = new Set([answer.toLowerCase()]);
+    const others = [];
+    shuffle(fcPool.filter(x => x.key !== fcCurrent.key)).forEach(x => {
+      const z = clozeable(x);
+      if (!z || others.length >= 3) return;
+      const w = z.toks[z.idx];
+      if (!seen.has(w.toLowerCase())) { seen.add(w.toLowerCase()); others.push(w); }
+    });
+    shuffle([answer, ...others]).forEach(wordOpt => {
+      addChoice(opts, wordOpt, wordOpt === answer, answer);
+    });
+  } else { // build
+    const toks = buildable(fcCurrent);
+    $("fcPrompt").textContent = fcCurrent.de;
+    $("fcSub").textContent = "Baue den Satz auf Italienisch — Wörter antippen:";
+    bd.style.display = "flex";
+    opts.className = "tok-bank";
+    fcBuildSel = [];
+    $("fcCheck").style.display = "inline-block";
+    shuffle(toks.map((t, i) => ({ t, i }))).forEach(o => {
+      const b = document.createElement("button");
+      b.className = "tok-btn";
+      b.textContent = o.t;
+      b.addEventListener("click", () => {
+        if (fcAnswered || b.disabled) return;
+        b.disabled = true;
+        const chip = document.createElement("button");
+        chip.className = "tok-btn";
+        chip.textContent = o.t;
+        chip.addEventListener("click", () => {
+          if (fcAnswered) return;
+          chip.remove();
+          b.disabled = false;
+          fcBuildSel = fcBuildSel.filter(x => x.chip !== chip);
+        });
+        bd.appendChild(chip);
+        fcBuildSel.push({ t: o.t, chip });
+      });
+      opts.appendChild(b);
+    });
+  }
+}
+
+function addChoice(container, label, isCorrect, correctText) {
+  const b = document.createElement("button");
+  b.className = "quiz-opt";
+  b.textContent = label;
+  b.addEventListener("click", () => {
+    if (fcAnswered) return;
+    container.querySelectorAll(".quiz-opt").forEach(x => {
+      x.disabled = true;
+      if (x.textContent === correctText) x.classList.add("correct");
+    });
+    if (!isCorrect) b.classList.add("wrong");
+    settle(isCorrect);
   });
+  container.appendChild(b);
+}
+
+function checkBuild() {
+  if (fcAnswered || fcType !== "build") return;
+  const attempt = fcBuildSel.map(x => x.t).join(" ");
+  const ok = attempt === fcCurrent.it;
+  $("fcBuild").classList.add(ok ? "ok" : "no");
+  $("fcCheck").style.display = "none";
+  settle(ok);
 }
 
 function levelHtml(key, wrong) {
@@ -1230,35 +1356,29 @@ function levelHtml(key, wrong) {
   return '<span class="dots">' + dots + '</span>' + info;
 }
 
-function answerFc(btn, opt) {
+function settle(correct) {
   if (fcAnswered) return;
   fcAnswered = true;
-  const askIt = (dir === "itde");
-  const correctText = askIt ? fcCurrent.de : fcCurrent.it;
-  const correct = opt.key === fcCurrent.key;
-  document.querySelectorAll("#fcOpts .quiz-opt").forEach(b => {
-    b.disabled = true;
-    if (b.textContent === correctText) b.classList.add("correct");
-  });
   const firstTry = !fcSeen.has(fcCurrent.key);
   fcSeen.add(fcCurrent.key);
+  const full = '<strong>' + fcCurrent.it + '</strong>' +
+    (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') +
+    (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
   if (correct) {
     if (firstTry) fcRight++;
     gradeKnown(fcCurrent.key);
-    $("fcFeedback").innerHTML = '<span class="ok">✓ Richtig!</span>' + (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') + (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
+    $("fcFeedback").innerHTML = '<span class="ok">✓ Richtig!</span> ' + full;
     $("fcLevel").innerHTML = levelHtml(fcCurrent.key, false);
     // Automatisch weiter — aber erst, wenn die Ansage fertig gesprochen ist
     fcAutoTimer = setTimeout(nextCard, Math.max(1500, clipDur(fcCurrent.key) / audioRate() * 1000 + 700));
-    $("fcNext").style.display = "inline-block";
   } else {
     if (firstTry) fcWrong++;
-    btn.classList.add("wrong");
     gradeAgain(fcCurrent.key);
-    $("fcFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + correctText + '</strong>' + (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') + (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
+    $("fcFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: ' + full;
     $("fcLevel").innerHTML = levelHtml(fcCurrent.key, true);
     fcQueue.splice(Math.min(3, fcQueue.length), 0, fcCurrent);   // kommt bald wieder
-    $("fcNext").style.display = "inline-block";
   }
+  $("fcNext").style.display = "inline-block";
   playKey(fcCurrent.key, fcCurrent.it);
   renderStats();
   updateTodayInfo();
