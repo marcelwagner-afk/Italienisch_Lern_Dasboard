@@ -195,6 +195,39 @@
     border: none; text-decoration: underline; cursor: pointer; margin-top: 6px;
   }
 
+  /* Verben-Tab */
+  .gram-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  .gram-card h3 { font-size: 16px; margin-bottom: 4px; }
+  .gram-card .gram-sub { font-size: 13.5px; color: var(--ink-2); margin-bottom: 12px; }
+  .vt { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .vt th {
+    text-align: left; font-size: 11.5px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.05em; padding: 7px 10px; border-bottom: 1px solid var(--hairline); background: #f6f5f2;
+  }
+  .vt td { padding: 7px 10px; border-bottom: 1px solid var(--hairline); }
+  .vt tr:last-child td { border-bottom: none; }
+  .vt .pron { color: var(--ink-2); white-space: nowrap; }
+  .vt .pron small { color: var(--muted); }
+  .end { color: var(--accent-deep); font-weight: 700; }
+  .verb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+  .verb-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+  }
+  .verb-card h4 { font-size: 15px; margin-bottom: 2px; }
+  .verb-card .vc-de { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .verb-card ul { list-style: none; font-size: 14px; line-height: 1.75; }
+  .verb-card li b { font-weight: 600; }
+  .verb-card li span.p { color: var(--muted); font-size: 12.5px; }
+  .tip-box {
+    background: #f4f8fe; border: 1px solid var(--accent-soft); border-radius: 12px;
+    padding: 14px 16px; font-size: 14px; line-height: 1.6; margin-bottom: 16px;
+  }
+  .tip-box b { color: var(--accent-deep); }
+  .gram-scroll { overflow-x: auto; }
+
   /* Mobile (iPhone) */
   @media (max-width: 600px) {
     header { padding-top: calc(16px + env(safe-area-inset-top)); }
@@ -229,6 +262,7 @@
       <button data-view="overview" class="active">Übersicht</button>
       <button data-view="cards">Karteikarten</button>
       <button data-view="quiz">Quiz</button>
+      <button data-view="verben">Verben</button>
     </nav>
   </div>
   <div class="tricolore"><span></span><span></span><span></span></div>
@@ -315,6 +349,67 @@
         <div class="msg" id="qzMsg"></div>
         <div style="margin-top:18px"><button class="btn primary" onclick="startQuiz()">Noch ein Quiz</button></div>
       </div>
+    </div>
+  </section>
+
+  <!-- VERBEN -->
+  <section class="view" id="view-verben">
+    <h2 class="view-title">Verben & Endungen</h2>
+    <p class="view-sub">Das Wichtigste zum Sätze-Bauen: Wer spricht? Und welche Endung bekommt das Verb?</p>
+
+    <div class="tip-box">
+      <b>Der wichtigste Trick:</b> Die Endung verrät im Italienischen bereits die Person — deshalb lassen Italiener das Pronomen meist weg! <b>Parlo</b> heißt schon „ich spreche“, <b>parli</b> „du sprichst“. Verneinung: einfach <b>non</b> davor („Non capisco“ = ich verstehe nicht). Fragen: gleiche Wortstellung, nur die Stimme heben.
+    </div>
+
+    <div class="gram-card">
+      <h3>Die Personen</h3>
+      <div class="gram-sub">Braucht man zum Betonen oder Abgrenzen: „<i>Io</i> guardo, <i>tu</i> salti!“</div>
+      <div class="gram-scroll"><table class="vt">
+        <tr><td class="pron"><b>io</b></td><td>ich</td><td class="pron"><b>noi</b></td><td>wir</td></tr>
+        <tr><td class="pron"><b>tu</b></td><td>du</td><td class="pron"><b>voi</b></td><td>ihr</td></tr>
+        <tr><td class="pron"><b>lui / lei</b></td><td>er / sie</td><td class="pron"><b>loro</b></td><td>sie (Mehrzahl)</td></tr>
+        <tr><td class="pron"><b>Lei</b> <small>(groß!)</small></td><td>Sie (höflich)</td><td class="pron"></td><td></td></tr>
+      </table></div>
+    </div>
+
+    <div class="gram-card">
+      <h3>Regelmäßige Verben: die drei Gruppen</h3>
+      <div class="gram-sub">Stamm behalten, Endung austauschen — die farbigen Endungen sind das Muster für (fast) alle Verben der Gruppe.</div>
+      <div class="gram-scroll"><table class="vt">
+        <thead><tr><th></th><th>-are<br>parlare (sprechen)</th><th>-ere<br>prendere (nehmen)</th><th>-ire<br>dormire (schlafen)</th></tr></thead>
+        <tbody>
+          <tr><td class="pron">io</td><td>parl<span class="end">o</span></td><td>prend<span class="end">o</span></td><td>dorm<span class="end">o</span></td></tr>
+          <tr><td class="pron">tu</td><td>parl<span class="end">i</span></td><td>prend<span class="end">i</span></td><td>dorm<span class="end">i</span></td></tr>
+          <tr><td class="pron">lui/lei</td><td>parl<span class="end">a</span></td><td>prend<span class="end">e</span></td><td>dorm<span class="end">e</span></td></tr>
+          <tr><td class="pron">noi</td><td>parl<span class="end">iamo</span></td><td>prend<span class="end">iamo</span></td><td>dorm<span class="end">iamo</span></td></tr>
+          <tr><td class="pron">voi</td><td>parl<span class="end">ate</span></td><td>prend<span class="end">ete</span></td><td>dorm<span class="end">ite</span></td></tr>
+          <tr><td class="pron">loro</td><td>parl<span class="end">ano</span></td><td>prend<span class="end">ono</span></td><td>dorm<span class="end">ono</span></td></tr>
+        </tbody>
+      </table></div>
+      <div class="gram-sub" style="margin-top:10px;margin-bottom:0">Merkhilfen: <b>io → -o</b>, <b>tu → -i</b>, <b>noi → -iamo</b> gelten in allen drei Gruppen. Viele -ire-Verben (z. B. <b>capire</b> = verstehen) schieben <b>-isc-</b> ein: cap<span class="end">isco</span>, cap<span class="end">isci</span>, cap<span class="end">isce</span>, capiamo, capite, cap<span class="end">iscono</span>.</div>
+    </div>
+
+    <h3 style="font-size:16px;margin:20px 0 4px">Die 7 wichtigsten unregelmäßigen Verben</h3>
+    <p class="view-sub">Diese lohnt es auswendig zu lernen — sie stecken in gefühlt jedem zweiten Satz. Reihenfolge jeweils: io, tu, lui/lei, noi, voi, loro.</p>
+    <div class="verb-grid">
+      <div class="verb-card"><h4>essere</h4><div class="vc-de">sein</div>
+        <ul><li><b>sono</b>, <b>sei</b>, <b>è</b>,</li><li><b>siamo</b>, <b>siete</b>, <b>sono</b></li><li><span class="p">„Sono stanco“ = ich bin müde</span></li></ul></div>
+      <div class="verb-card"><h4>avere</h4><div class="vc-de">haben</div>
+        <ul><li><b>ho</b>, <b>hai</b>, <b>ha</b>,</li><li><b>abbiamo</b>, <b>avete</b>, <b>hanno</b></li><li><span class="p">h ist stumm! „Ho fame“ = ich habe Hunger</span></li></ul></div>
+      <div class="verb-card"><h4>andare</h4><div class="vc-de">gehen / fahren</div>
+        <ul><li><b>vado</b>, <b>vai</b>, <b>va</b>,</li><li><b>andiamo</b>, <b>andate</b>, <b>vanno</b></li><li><span class="p">„Andiamo!“ = los, gehen wir!</span></li></ul></div>
+      <div class="verb-card"><h4>fare</h4><div class="vc-de">machen / tun</div>
+        <ul><li><b>faccio</b>, <b>fai</b>, <b>fa</b>,</li><li><b>facciamo</b>, <b>fate</b>, <b>fanno</b></li><li><span class="p">„Facciamo una pausa“ = machen wir Pause</span></li></ul></div>
+      <div class="verb-card"><h4>potere</h4><div class="vc-de">können / dürfen</div>
+        <ul><li><b>posso</b>, <b>puoi</b>, <b>può</b>,</li><li><b>possiamo</b>, <b>potete</b>, <b>possono</b></li><li><span class="p">„Possiamo cambiare?“ = können wir ändern?</span></li></ul></div>
+      <div class="verb-card"><h4>volere</h4><div class="vc-de">wollen</div>
+        <ul><li><b>voglio</b>, <b>vuoi</b>, <b>vuole</b>,</li><li><b>vogliamo</b>, <b>volete</b>, <b>vogliono</b></li><li><span class="p">„Vuoi un caffè?“ = willst du einen Kaffee?</span></li></ul></div>
+      <div class="verb-card"><h4>dovere</h4><div class="vc-de">müssen / sollen</div>
+        <ul><li><b>devo</b>, <b>devi</b>, <b>deve</b>,</li><li><b>dobbiamo</b>, <b>dovete</b>, <b>devono</b></li><li><span class="p">„Dobbiamo provare“ = wir müssen üben</span></li></ul></div>
+    </div>
+
+    <div class="tip-box" style="margin-top:16px">
+      <b>Damit kannst du sofort Sätze bauen:</b> Nimm potere/volere/dovere + Grundform: „<b>Voglio provare</b>“ (ich will es versuchen), „<b>Puoi ripetere?</b>“ (kannst du wiederholen?), „<b>Dobbiamo lavorare sulla trottola</b>“ (wir müssen an der Pirouette arbeiten). Die Grundform dahinter bleibt immer unverändert!
     </div>
   </section>
 
