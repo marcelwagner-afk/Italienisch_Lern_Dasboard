@@ -329,6 +329,7 @@
     </div>
     <div class="controls">
       <span class="seg"><button class="dir-btn on" data-dir="deit" onclick="setDir('deit')">DE → IT</button><button class="dir-btn" data-dir="itde" onclick="setDir('itde')">IT → DE</button></span>
+      <span class="seg"><button class="spd-btn on" data-spd="normal" onclick="setSpeed('normal')">Tempo normal</button><button class="spd-btn" data-spd="slow" onclick="setSpeed('slow')">🐢 Langsam</button></span>
       <label for="fcCat" style="font-size:14px;color:var(--ink-2)">Freies Üben:</label>
       <select id="fcCat"></select>
       <button class="btn" onclick="startFlashcards()">Stapel starten</button>
@@ -830,6 +831,7 @@ const INTERVALS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30 };  // Box → Tage bis zur W
 let cards = {};                       // "catId:index" → { box, due }
 let daily = {};                       // "YYYY-MM-DD" → gelernte Karten
 let dir = "deit";                     // "deit" = DE→IT, "itde" = IT→DE
+let slowMode = false;                 // 🐢 Langsam-Modus für die Aussprache
 
 function todayStr(offsetDays) {
   const d = new Date();
@@ -846,11 +848,12 @@ function loadState() {
     }
     if (s.cards) cards = s.cards;
     if (s.daily) daily = s.daily;
+    if (s.slow) { slowMode = true; }
   } catch (e) { /* Speicherung nicht verfügbar — App läuft trotzdem */ }
 }
 function saveState() {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ cards, daily }));
+    localStorage.setItem(LS_KEY, JSON.stringify({ cards, daily, slow: slowMode }));
   } catch (e) { /* ignorieren */ }
 }
 function resetProgress() {
@@ -924,6 +927,7 @@ function playKey(key, itText, ev) {
       }
     };
     try {
+      spriteAudio.playbackRate = audioRate();
       spriteAudio.currentTime = seg[0];
       const p = spriteAudio.play();
       if (p && p.catch) p.catch(() => speakIt(itText));
@@ -956,9 +960,18 @@ function speakIt(text, ev) {
   const u = new SpeechSynthesisUtterance(clean);
   u.lang = "it-IT";
   if (itVoice) u.voice = itVoice;
-  u.rate = 0.9;
+  u.rate = slowMode ? 0.65 : 0.9;
   speechSynthesis.cancel();
   speechSynthesis.speak(u);
+}
+
+// ---------------- TEMPO ----------------
+function audioRate() { return slowMode ? 0.75 : 1.0; }
+function setSpeed(s) {
+  slowMode = (s === "slow");
+  document.querySelectorAll(".spd-btn").forEach(b => b.classList.toggle("on", b.dataset.spd === s));
+  saveState();
+  if (fcCurrent) playKey(fcCurrent.key, fcCurrent.it);   // gleich hörbar machen
 }
 
 // ---------------- RICHTUNG ----------------
@@ -1235,7 +1248,7 @@ function answerFc(btn, opt) {
     $("fcFeedback").innerHTML = '<span class="ok">✓ Richtig!</span>' + (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') + (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
     $("fcLevel").innerHTML = levelHtml(fcCurrent.key, false);
     // Automatisch weiter — aber erst, wenn die Ansage fertig gesprochen ist
-    fcAutoTimer = setTimeout(nextCard, Math.max(1500, clipDur(fcCurrent.key) * 1000 + 700));
+    fcAutoTimer = setTimeout(nextCard, Math.max(1500, clipDur(fcCurrent.key) / audioRate() * 1000 + 700));
     $("fcNext").style.display = "inline-block";
   } else {
     if (firstTry) fcWrong++;
@@ -1254,6 +1267,7 @@ function answerFc(btn, opt) {
 // ---------------- INIT ----------------
 loadState();
 saveState();   // Migration sofort festschreiben
+document.querySelectorAll(".spd-btn").forEach(b => b.classList.toggle("on", b.dataset.spd === (slowMode ? "slow" : "normal")));
 fillCatSelects();
 renderOverview();
 updateTodayInfo();
