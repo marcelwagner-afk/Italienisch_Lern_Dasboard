@@ -67,6 +67,15 @@
   .tile .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
   .tile .sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
 
+  /* Gesamt-Fortschritt */
+  .master-bar { margin: -8px 0 20px; }
+  .master-bar .mb-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+  .master-bar .mb-head b { color: var(--ink); font-size: 14px; }
+  .master-bar .mb-sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .test-badge { font-size: 12.5px; font-weight: 600; margin-top: 6px; display: inline-block; }
+  .test-badge.pass { color: var(--good-text); }
+  .test-badge.open { color: var(--ink-2); }
+
   /* Tabs */
   nav.tabs { display: flex; gap: 6px; padding-bottom: 0; margin-top: 4px; }
   nav.tabs button {
@@ -300,6 +309,11 @@
       <div class="tile"><div class="label">Gelernt</div><div class="value" id="statKnown">0</div><div class="sub" id="statKnownSub">diese Sitzung</div></div>
       <div class="tile"><div class="label">Heute</div><div class="value" id="statToday">0/20</div><div class="sub" id="statTodaySub">Tagesziel</div></div>
     </div>
+    <div class="master-bar">
+      <div class="mb-head"><span>Gesamt-Fortschritt bis 100 % Beherrschung</span><b id="masterPct">0 %</b></div>
+      <div class="bar"><div class="fill" id="masterFill" style="width:0%"></div></div>
+      <div class="mb-sub" id="masterSub"></div>
+    </div>
     <nav class="tabs">
       <button data-view="overview" class="active">Übersicht</button>
       <button data-view="cards">Übungen</button>
@@ -322,6 +336,7 @@
       <div class="detail-head">
         <button class="back-btn" onclick="showOverviewGrid()">← Zurück</button>
         <div class="detail-title" id="detailTitle"></div>
+        <button class="btn primary" id="detailTestBtn" style="margin-left:auto">🏁 Kapitel-Test</button>
       </div>
       <div class="table-scroll">
         <table class="word-table">
@@ -362,9 +377,9 @@
     </div>
     <div class="fc-stage" id="fcDone" style="display:none">
       <div class="fc-card" style="cursor:default">
-        <div class="fc-word">Bravissimo! 🎉</div>
+        <div class="fc-word" id="fcDoneTitle">Bravissimo! 🎉</div>
         <div class="fc-done-msg" id="fcDoneMsg"></div>
-        <button class="btn primary" onclick="startToday()">Neuer Durchgang</button>
+        <button class="btn primary" id="fcDoneBtn" onclick="startToday()">Neuer Durchgang</button>
       </div>
     </div>
   </section>
@@ -845,6 +860,7 @@ const DAILY_GOAL = 20;
 const INTERVALS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30 };  // Box → Tage bis zur Wiederholung
 let cards = {};                       // "catId:index" → { box, due }
 let daily = {};                       // "YYYY-MM-DD" → gelernte Karten
+let tests = {};                       // catId → { right, total, date } (bestes Ergebnis)
 let dir = "deit";                     // "deit" = DE→IT, "itde" = IT→DE
 let slowMode = false;                 // 🐢 Langsam-Modus für die Aussprache
 
@@ -863,18 +879,20 @@ function loadState() {
     }
     if (s.cards) cards = s.cards;
     if (s.daily) daily = s.daily;
+    if (s.tests) tests = s.tests;
     if (s.slow) { slowMode = true; }
   } catch (e) { /* Speicherung nicht verfügbar — App läuft trotzdem */ }
 }
 function saveState() {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ cards, daily, slow: slowMode }));
+    localStorage.setItem(LS_KEY, JSON.stringify({ cards, daily, tests, slow: slowMode }));
   } catch (e) { /* ignorieren */ }
 }
 function resetProgress() {
   if (!confirm("Gesamten Fortschritt zurücksetzen?")) return;
   cards = {};
   daily = {};
+  tests = {};
   try { localStorage.removeItem(LS_KEY); } catch (e) {}
   renderOverview();
   updateTodayInfo();
@@ -1043,6 +1061,18 @@ function renderStats() {
   $("statToday").textContent = todayCount() + "/" + DAILY_GOAL;
   const st = streakDays();
   $("statTodaySub").textContent = st > 0 ? "Serie: " + st + (st === 1 ? " Tag" : " Tage") + " 🔥" : "Tagesziel";
+  // Gesamt-Fortschritt bis 100 % (alle Vokabeln auf Stufe 5)
+  let sum = 0, mastered = 0;
+  Object.keys(cards).forEach(k => { sum += cards[k].box; if (cards[k].box >= 5) mastered++; });
+  const maxPoints = 5 * totalWords;
+  const pct = Math.min(100, Math.round(100 * sum / maxPoints));
+  $("masterPct").textContent = pct + " %";
+  $("masterFill").style.width = pct + "%";
+  $("masterFill").className = "fill" + (pct === 100 ? " done" : "");
+  const restDays = Math.ceil((maxPoints - sum) / DAILY_GOAL);
+  $("masterSub").textContent = pct === 100
+    ? "Tutto fatto — alle " + totalWords + " Einträge voll gemeistert! 🏆"
+    : mastered + " von " + totalWords + " voll gemeistert (Stufe 5) · bei " + DAILY_GOAL + " Übungen/Tag noch grob " + restDays + " Tage bis 100 %";
 }
 function updateTodayInfo() {
   const due = dueCount();
@@ -1055,6 +1085,14 @@ function updateTodayInfo() {
 }
 
 // ---------------- ÜBERSICHT ----------------
+function testBadge(catId) {
+  const t = tests[catId];
+  if (!t) return '<span class="test-badge open">🏁 Kapitel-Test noch offen</span>';
+  return t.right / t.total >= 0.9
+    ? '<span class="test-badge pass">🏁 Test bestanden: ' + t.right + '/' + t.total + ' ✅</span>'
+    : '<span class="test-badge open">🏁 Letzter Test: ' + t.right + '/' + t.total + ' (ab 90 % bestanden)</span>';
+}
+
 function renderOverview() {
   renderStats();
   updateTodayInfo();
@@ -1086,7 +1124,8 @@ function renderOverview() {
     '<span class="cat-count">' + sPool.length + ' Einträge</span></div>' +
     '<div class="bar"><div class="fill' + (sm.pct === 100 ? ' done' : '') + '" style="width:' + sm.pct + '%"></div></div>' +
     '<div class="cat-status">' + sm.learned + ' von ' + sPool.length + ' geübt · Ø Stufe ' + sm.avg + ' · ' + sm.pct + '% gemeistert' +
-    (sm.due > 0 ? ' · <span class="due-badge">' + sm.due + ' fällig</span>' : '') + '</div>';
+    (sm.due > 0 ? ' · <span class="due-badge">' + sm.due + ' fällig</span>' : '') + '</div>' +
+    testBadge("starter");
   sCard.addEventListener("click", () => showCatDetail("starter"));
   grid.appendChild(sCard);
   CATS.forEach(cat => {
@@ -1100,7 +1139,8 @@ function renderOverview() {
       '<span class="cat-count">' + cat.words.length + ' Wörter</span></div>' +
       '<div class="bar"><div class="fill' + (pct === 100 ? ' done' : '') + '" style="width:' + pct + '%"></div></div>' +
       '<div class="cat-status">' + learned + ' von ' + cat.words.length + ' geübt · Ø Stufe ' + m.avg + ' · ' + pct + '% gemeistert' +
-      (due > 0 ? ' · <span class="due-badge">' + due + ' fällig</span>' : '') + '</div>';
+      (due > 0 ? ' · <span class="due-badge">' + due + ' fällig</span>' : '') + '</div>' +
+      testBadge(cat.id);
     card.addEventListener("click", () => showCatDetail(cat.id));
     grid.appendChild(card);
   });
@@ -1117,6 +1157,7 @@ function showCatDetail(catId) {
   $("ov-grid-wrap").style.display = "none";
   $("ov-detail").style.display = "block";
   $("detailTitle").textContent = icon + " " + name;
+  $("detailTestBtn").onclick = () => startTest(catId, icon + " " + name);
   const body = $("detailBody");
   body.innerHTML = "";
   pool.forEach(w => {
@@ -1171,6 +1212,22 @@ function startFlashcards() {
   startStack(shuffle(pool), "free", pool);
 }
 
+let testCat = null, testName = "";
+function startTest(catId, name) {
+  const pool = poolFor(catId);
+  if (pool.length === 0) return;
+  testCat = catId;
+  testName = name || "Kapitel-Test";
+  startStack(shuffle(pool).slice(0, Math.min(10, pool.length)), "test", pool);
+  document.querySelector('nav.tabs button[data-view="cards"]').click();
+}
+function testType(word) {
+  const r = Math.random();
+  if (r < 0.4) return "mc";
+  if (r < 0.7) return "hear";
+  return clozeable(word) ? "cloze" : "mc";
+}
+
 function startToday() {
   const all = poolFor("all");
   const due = shuffle(all.filter(w => isDue(w.key)));
@@ -1199,6 +1256,22 @@ function nextCard() {
   if (fcQueue.length === 0) {
     $("fcStage").style.display = "none";
     $("fcDone").style.display = "block";
+    if (fcMode === "test") {
+      const prev = tests[testCat];
+      if (!prev || fcRight > prev.right) tests[testCat] = { right: fcRight, total: fcStartCount, date: todayStr() };
+      saveState();
+      const passed = fcRight / fcStartCount >= 0.9;
+      $("fcDoneTitle").textContent = passed ? "Test bestanden! 🏁✅" : "Test beendet 🏁";
+      $("fcDoneMsg").textContent = testName + ": " + fcRight + " von " + fcStartCount + " richtig." +
+        (passed ? " Bravissimo!" : " Für das ✅ brauchst du 90 % — übe das Kapitel und versuch es nochmal!");
+      $("fcDoneBtn").textContent = "Test wiederholen";
+      $("fcDoneBtn").onclick = () => startTest(testCat, testName);
+      renderStats();
+      return;
+    }
+    $("fcDoneTitle").textContent = "Bravissimo! 🎉";
+    $("fcDoneBtn").textContent = "Neuer Durchgang";
+    $("fcDoneBtn").onclick = () => startToday();
     const goal = todayCount() >= DAILY_GOAL ? " Tagesziel erreicht! 🔥" : "";
     const quote = fcRight + fcWrong > 0 ? " " + fcRight + " von " + (fcRight + fcWrong) + " beim ersten Versuch richtig." : "";
     $("fcDoneMsg").textContent = (fcMode === "today" ? "Tagespaket geschafft!" : "Stapel geschafft!") + quote + goal;
@@ -1240,9 +1313,11 @@ const TYPE_LABEL = { mc: "Auswahl", hear: "Hören 🔊", cloze: "Lückentext ✏
 let fcType = "mc", fcBuildSel = [];
 
 function renderFcQuestion() {
-  fcType = pickType(fcCurrent);
-  $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten · " + fcRight + " richtig" +
-    (fcWrong > 0 ? " · " + fcWrong + " nochmal" : "") + " · " + TYPE_LABEL[fcType];
+  fcType = fcMode === "test" ? testType(fcCurrent) : pickType(fcCurrent);
+  $("fcProgress").textContent = fcMode === "test"
+    ? "🏁 " + testName + " · Frage " + (fcStartCount - fcQueue.length) + " von " + fcStartCount + " · " + TYPE_LABEL[fcType]
+    : "Noch " + (fcQueue.length + 1) + " Karten · " + fcRight + " richtig" +
+      (fcWrong > 0 ? " · " + fcWrong + " nochmal" : "") + " · " + TYPE_LABEL[fcType];
   $("fcFeedback").innerHTML = "";
   $("fcLevel").innerHTML = "";
   $("fcNext").style.display = "none";
@@ -1364,6 +1439,20 @@ function settle(correct) {
   const full = '<strong>' + fcCurrent.it + '</strong>' +
     (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') +
     (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
+  if (fcMode === "test") {
+    // Testmodus: nur bewerten, Lernstufen bleiben unberührt
+    if (correct) {
+      fcRight++;
+      $("fcFeedback").innerHTML = '<span class="ok">✓ Richtig!</span> ' + full;
+      fcAutoTimer = setTimeout(nextCard, Math.max(1500, clipDur(fcCurrent.key) / audioRate() * 1000 + 700));
+    } else {
+      fcWrong++;
+      $("fcFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: ' + full;
+    }
+    $("fcNext").style.display = "inline-block";
+    playKey(fcCurrent.key, fcCurrent.it);
+    return;
+  }
   if (correct) {
     if (firstTry) fcRight++;
     gradeKnown(fcCurrent.key);
