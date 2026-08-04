@@ -844,6 +844,33 @@ function dueCount() {
   return n;
 }
 
+// ---------------- AUDIO: echte Aufnahmen (Sprite) mit TTS-Fallback ----------------
+let spriteMap = null, spriteAudio = null, spriteTimer = null;
+fetch("audio-sprites.json").then(r => r.ok ? r.json() : null).then(m => { spriteMap = m; }).catch(() => {});
+
+function playKey(key, itText, ev) {
+  if (ev) ev.stopPropagation();
+  const k = key ? key.replace(":", "_") : null;
+  const seg = spriteMap && k ? spriteMap[k] : null;
+  if (!seg) { speakIt(itText); return; }
+  if (!spriteAudio) { spriteAudio = new Audio("audio-it.mp3"); spriteAudio.preload = "auto"; }
+  const go = () => {
+    clearTimeout(spriteTimer);
+    try {
+      spriteAudio.currentTime = seg[0];
+      const p = spriteAudio.play();
+      if (p && p.catch) p.catch(() => speakIt(itText));
+      spriteTimer = setTimeout(() => spriteAudio.pause(), seg[1] * 1000 + 150);
+    } catch (e) { speakIt(itText); }
+  };
+  if (spriteAudio.readyState >= 1) go();
+  else {
+    spriteAudio.addEventListener("loadedmetadata", go, { once: true });
+    spriteAudio.addEventListener("error", () => speakIt(itText), { once: true });
+    spriteAudio.load();
+  }
+}
+
 // ---------------- AUDIO (italienische Stimme) ----------------
 let itVoice = null;
 function pickVoice() {
@@ -992,7 +1019,7 @@ function showCatDetail(catId) {
       '<td class="it" title="Anhören 🔊">' + w.it + '</td>' +
       '<td class="pr">' + (w.pr || "") + '</td>' +
       '<td class="note">' + (w.note || "") + '</td>';
-    tr.querySelector(".it").addEventListener("click", () => speakIt(w.it));
+    tr.querySelector(".it").addEventListener("click", () => playKey(w.key, w.it));
     body.appendChild(tr);
   });
 }
@@ -1082,8 +1109,8 @@ function renderCardFace() {
   $("fcActions").style.visibility = fcFlipped ? "visible" : "hidden";
   const sp = $("fcSpeak");
   sp.style.display = showIt ? "block" : "none";
-  sp.onclick = (ev) => speakIt(fcCurrent.it, ev);
-  if (showIt && fcFlipped) speakIt(fcCurrent.it);  // Antwort automatisch vorlesen
+  sp.onclick = (ev) => playKey(fcCurrent.key, fcCurrent.it, ev);
+  if (showIt && fcFlipped) playKey(fcCurrent.key, fcCurrent.it);  // Antwort automatisch vorlesen
 }
 
 function flipCard() {
@@ -1134,8 +1161,8 @@ function renderQuestion() {
   $("qzSub").textContent = askIt ? "Was bedeutet das?" : "Wie heißt das auf Italienisch?";
   const sp = $("qzSpeak");
   sp.style.display = askIt ? "block" : "none";
-  sp.onclick = (ev) => speakIt(q.word.it, ev);
-  if (askIt) speakIt(q.word.it);
+  sp.onclick = (ev) => playKey(q.word.key, q.word.it, ev);
+  if (askIt) playKey(q.word.key, q.word.it);
   $("qzFeedback").innerHTML = "";
   $("qzNext").disabled = true;
   $("qzNext").textContent = qzIndex === qzQuestions.length - 1 ? "Ergebnis →" : "Weiter →";
@@ -1169,8 +1196,8 @@ function answer(btn, opt, q) {
     btn.classList.add("wrong");
     $("qzFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + correctText + '</strong>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
   }
-  if (!askIt) { $("qzSpeak").style.display = "block"; }
-  speakIt(q.word.it);
+  if (!askIt) { $("qzSpeak").style.display = "block"; $("qzSpeak").onclick = (ev) => playKey(q.word.key, q.word.it, ev); }
+  playKey(q.word.key, q.word.it);
   $("qzNext").disabled = false;
   saveState();
   renderStats();
