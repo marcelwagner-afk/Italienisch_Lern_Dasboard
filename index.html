@@ -195,6 +195,31 @@
     border: none; text-decoration: underline; cursor: pointer; margin-top: 6px;
   }
 
+  /* Lern-Turbo: Heute-Box, Richtungs-Umschalter, Audio */
+  .today-box {
+    background: linear-gradient(135deg, #f4f8fe, #eef8ee); border: 1px solid var(--accent-soft);
+    border-radius: 14px; padding: 16px 18px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .today-box .ti { flex: 1; min-width: 180px; }
+  .today-box .ti b { font-size: 15px; }
+  .today-box .ti .sub2 { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+  .seg button {
+    font: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border: none;
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
+  }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .speak-btn {
+    font: inherit; font-size: 17px; border: 1px solid var(--border); background: var(--surface);
+    border-radius: 50%; width: 38px; height: 38px; cursor: pointer; line-height: 1;
+  }
+  .speak-btn:hover { background: var(--accent-soft); }
+  .fc-card .speak-btn { position: absolute; top: 12px; right: 14px; }
+  .due-badge { color: var(--accent-deep); font-weight: 600; }
+  .word-table .it { cursor: pointer; }
+  .starter-card { border: 1.5px solid var(--accent); }
+
   /* Verben-Tab */
   .gram-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
@@ -256,7 +281,7 @@
     <div class="tiles">
       <div class="tile"><div class="label">Vokabeln</div><div class="value" id="statTotal">0</div><div class="sub" id="statTotalSub">Kategorien</div></div>
       <div class="tile"><div class="label">Gelernt</div><div class="value" id="statKnown">0</div><div class="sub" id="statKnownSub">diese Sitzung</div></div>
-      <div class="tile"><div class="label">Quiz-Quote</div><div class="value" id="statQuiz">–</div><div class="sub" id="statQuizSub">noch kein Quiz</div></div>
+      <div class="tile"><div class="label">Heute</div><div class="value" id="statToday">0/20</div><div class="sub" id="statTodaySub">Tagesziel</div></div>
     </div>
     <nav class="tabs">
       <button data-view="overview" class="active">Übersicht</button>
@@ -295,16 +320,22 @@
   <!-- KARTEIKARTEN -->
   <section class="view" id="view-cards">
     <h2 class="view-title">Karteikarten</h2>
-    <p class="view-sub">Deutsch → Italienisch. Karte anklicken zum Umdrehen. „Nochmal“ legt die Karte wieder hinten in den Stapel.</p>
+    <p class="view-sub">Karte anklicken zum Umdrehen. „Nochmal“ legt die Karte zurück in den Stapel — und sie kommt morgen wieder. „Wusste ich“ verlängert den Abstand: 1 → 3 → 7 → 14 Tage.</p>
+    <div class="today-box">
+      <div class="ti"><b>🔥 Heute lernen</b><div class="sub2" id="todayInfo"></div></div>
+      <button class="btn primary" onclick="startToday()">Los geht's</button>
+    </div>
     <div class="controls">
-      <label for="fcCat" style="font-size:14px;color:var(--ink-2)">Kategorie:</label>
+      <span class="seg"><button class="dir-btn on" data-dir="deit" onclick="setDir('deit')">DE → IT</button><button class="dir-btn" data-dir="itde" onclick="setDir('itde')">IT → DE</button></span>
+      <label for="fcCat" style="font-size:14px;color:var(--ink-2)">Freies Üben:</label>
       <select id="fcCat"></select>
-      <button class="btn primary" onclick="startFlashcards()">Stapel starten</button>
+      <button class="btn" onclick="startFlashcards()">Stapel starten</button>
     </div>
     <div class="fc-stage" id="fcStage" style="display:none">
       <div class="fc-progress" id="fcProgress"></div>
       <div class="fc-card" id="fcCard" onclick="flipCard()">
         <div class="fc-lang" id="fcLang">Deutsch</div>
+        <button class="speak-btn" id="fcSpeak" style="display:none" title="Anhören">🔊</button>
         <div class="fc-word" id="fcWord"></div>
         <div class="fc-pron" id="fcPron"></div>
         <div class="fc-note" id="fcNote"></div>
@@ -327,8 +358,9 @@
   <!-- QUIZ -->
   <section class="view" id="view-quiz">
     <h2 class="view-title">Quiz</h2>
-    <p class="view-sub">10 Fragen, Deutsch → Italienisch, vier Antwortmöglichkeiten.</p>
+    <p class="view-sub">10 Fragen, vier Antwortmöglichkeiten — Richtung frei wählbar.</p>
     <div class="controls">
+      <span class="seg"><button class="dir-btn on" data-dir="deit" onclick="setDir('deit')">DE → IT</button><button class="dir-btn" data-dir="itde" onclick="setDir('itde')">IT → DE</button></span>
       <label for="qzCat" style="font-size:14px;color:var(--ink-2)">Kategorie:</label>
       <select id="qzCat"></select>
       <button class="btn primary" onclick="startQuiz()">Quiz starten</button>
@@ -336,8 +368,8 @@
     <div class="quiz-stage" id="qzStage" style="display:none">
       <div class="quiz-q">
         <div class="quiz-count" id="qzCount"></div>
-        <div class="quiz-prompt" id="qzPrompt"></div>
-        <div class="quiz-sub">Wie heißt das auf Italienisch?</div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="quiz-prompt" id="qzPrompt"></div><button class="speak-btn" id="qzSpeak" style="display:none" title="Anhören">🔊</button></div>
+        <div class="quiz-sub" id="qzSub">Wie heißt das auf Italienisch?</div>
         <div class="quiz-opts" id="qzOpts"></div>
         <div class="quiz-feedback" id="qzFeedback"></div>
         <div class="quiz-next-row"><button class="btn" id="qzNext" onclick="quizNext()" disabled>Weiter →</button></div>
@@ -746,32 +778,115 @@ const CATS = [
 
 // ---------------- STATE (auf dem Gerät gespeichert) ----------------
 const LS_KEY = "italiano-allenamento-v1";
-const known = new Set();          // "catId:index"
+const DAILY_GOAL = 20;
+const INTERVALS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30 };  // Box → Tage bis zur Wiederholung
+let cards = {};                       // "catId:index" → { box, due }
 let quizStats = { asked: 0, correct: 0 };
+let daily = {};                       // "YYYY-MM-DD" → gelernte Karten
+let dir = "deit";                     // "deit" = DE→IT, "itde" = IT→DE
+
+function todayStr(offsetDays) {
+  const d = new Date();
+  d.setDate(d.getDate() + (offsetDays || 0));
+  return d.toLocaleDateString("sv-SE"); // YYYY-MM-DD, lokale Zeitzone
+}
 
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(LS_KEY));
-    if (s) {
-      (s.known || []).forEach(k => known.add(k));
-      if (s.quizStats) quizStats = s.quizStats;
+    if (!s) return;
+    if (s.known) { // Migration von der alten Version: Gelerntes landet in Box 3
+      (s.known || []).forEach(k => { cards[k] = { box: 3, due: todayStr(0) }; });
     }
+    if (s.cards) cards = s.cards;
+    if (s.quizStats) quizStats = s.quizStats;
+    if (s.daily) daily = s.daily;
   } catch (e) { /* Speicherung nicht verfügbar — App läuft trotzdem */ }
 }
 function saveState() {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ known: [...known], quizStats }));
+    localStorage.setItem(LS_KEY, JSON.stringify({ cards, quizStats, daily }));
   } catch (e) { /* ignorieren */ }
 }
 function resetProgress() {
   if (!confirm("Gesamten Fortschritt zurücksetzen?")) return;
-  known.clear();
+  cards = {};
   quizStats = { asked: 0, correct: 0 };
+  daily = {};
   try { localStorage.removeItem(LS_KEY); } catch (e) {}
-  $("statQuiz").textContent = "–";
-  $("statQuizSub").textContent = "noch kein Quiz";
   renderOverview();
+  updateTodayInfo();
 }
+
+// ---------------- SPACED REPETITION ----------------
+function isLearned(key) { return (cards[key] && cards[key].box || 0) >= 1; }
+function isDue(key) { const c = cards[key]; return !!c && c.box >= 1 && c.due <= todayStr(); }
+function gradeKnown(key) {
+  const cur = cards[key] ? cards[key].box : 0;
+  const nb = Math.min(cur + 1, 5);
+  cards[key] = { box: nb, due: todayStr(INTERVALS[nb] || 30) };
+  bumpDaily(); saveState();
+}
+function gradeAgain(key) {
+  cards[key] = { box: 1, due: todayStr(1) };
+  bumpDaily(); saveState();
+}
+function bumpDaily() { const t = todayStr(); daily[t] = (daily[t] || 0) + 1; }
+function todayCount() { return daily[todayStr()] || 0; }
+function streakDays() {
+  let n = 0, i = todayCount() >= DAILY_GOAL ? 0 : 1;
+  while ((daily[todayStr(-i)] || 0) >= DAILY_GOAL) { n++; i++; }
+  return n;
+}
+function dueCount() {
+  let n = 0;
+  CATS.forEach(c => c.words.forEach((_, i) => { if (isDue(c.id + ":" + i)) n++; }));
+  return n;
+}
+
+// ---------------- AUDIO (italienische Stimme) ----------------
+let itVoice = null;
+function pickVoice() {
+  try {
+    const vs = speechSynthesis.getVoices();
+    itVoice = vs.find(v => v.lang && v.lang.toLowerCase().startsWith("it")) || null;
+  } catch (e) {}
+}
+if ("speechSynthesis" in window) {
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function speakIt(text, ev) {
+  if (ev) ev.stopPropagation();
+  if (!("speechSynthesis" in window) || !text) return;
+  const clean = text.replace(/\(.*?\)/g, "").replace(/…/g, "").replace(/\s*\/\s*/g, ". ").trim();
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = "it-IT";
+  if (itVoice) u.voice = itVoice;
+  u.rate = 0.9;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+// ---------------- RICHTUNG ----------------
+function setDir(d) {
+  dir = d;
+  document.querySelectorAll(".dir-btn").forEach(b => b.classList.toggle("on", b.dataset.dir === d));
+  if (fcCurrent) renderCardFace();
+}
+
+// ---------------- STARTER-DECK: die wichtigsten Einträge ----------------
+const STARTER_IT = new Set([
+  "Ciao","Buongiorno","Buonasera","Come stai?","Bene, grazie. E tu?","Grazie (mille)","Prego","Per favore",
+  "Scusa / Scusami","Piacere","A dopo / a domani","Non capisco","Più piano, per favore","Come si dice … in italiano?",
+  "Il conto, per favore","Allora …","Va bene","Certo!","Esatto!","Davvero?","Un attimo","Non fa niente","In bocca al lupo!",
+  "Vorrei …","(Non) posso","Possiamo …?","Dobbiamo","Mi piace …","(Non) lo so","Capisco / Ho capito!","forse / magari",
+  "un po'","Andiamo","Ho bisogno di …","Vai! / Dai!","Ancora una volta!","Ferma! / Stop!","Piano / più piano",
+  "Più veloce!","Pausa","Adesso! / Ora!","Aspetta / Aspettate","Insieme!","Pronti?","Bene!","Bravi! / Bravissimi!",
+  "Perfetto!","Quasi!","Tutto bene?","Non mollare!","Quando?","Dove?","Perché?","Come?","Va bene?","Come va?",
+  "Puoi ripetere?","uno, due, tre","quattro, cinque, sei","sette, otto, nove, dieci","oggi / domani / stasera",
+  "A che ora?","D'accordo!","Non c'è problema","Secondo me …"
+]);
 
 const $ = id => document.getElementById(id);
 const totalWords = CATS.reduce((n, c) => n + c.words.length, 0);
@@ -800,21 +915,47 @@ document.querySelectorAll("nav.tabs button").forEach(btn => {
 function renderStats() {
   $("statTotal").textContent = totalWords;
   $("statTotalSub").textContent = "in " + CATS.length + " Kategorien";
-  $("statKnown").textContent = known.size;
-  $("statKnownSub").textContent = known.size === totalWords ? "alle! 🎉" : "gespeichert";
-  if (quizStats.asked > 0) {
-    $("statQuiz").textContent = Math.round(100 * quizStats.correct / quizStats.asked) + "%";
-    $("statQuizSub").textContent = quizStats.correct + " von " + quizStats.asked + " richtig";
-  }
+  const learned = Object.keys(cards).filter(k => cards[k].box >= 1).length;
+  $("statKnown").textContent = learned;
+  const due = dueCount();
+  $("statKnownSub").textContent = due > 0 ? due + " heute fällig" : (learned === totalWords ? "alle! 🎉" : "im Lernsystem");
+  $("statToday").textContent = todayCount() + "/" + DAILY_GOAL;
+  const st = streakDays();
+  $("statTodaySub").textContent = st > 0 ? "Serie: " + st + (st === 1 ? " Tag" : " Tage") + " 🔥" : "Tagesziel";
+}
+function updateTodayInfo() {
+  const due = dueCount();
+  const fresh = Math.max(0, DAILY_GOAL - due);
+  const el = $("todayInfo");
+  if (!el) return;
+  el.textContent = due > 0
+    ? due + " Karten fällig" + (fresh > 0 ? " + " + fresh + " neue" : "") + " · Heute schon: " + todayCount() + "/" + DAILY_GOAL
+    : "Nichts fällig — es kommen " + Math.min(DAILY_GOAL, totalWords) + " neue Karten · Heute schon: " + todayCount() + "/" + DAILY_GOAL;
 }
 
 // ---------------- ÜBERSICHT ----------------
 function renderOverview() {
   renderStats();
+  updateTodayInfo();
   const grid = $("catGrid");
   grid.innerHTML = "";
+  // Starter-Deck als erste Karte
+  const sPool = poolFor("starter");
+  const sLearned = sPool.filter(w => isLearned(w.key)).length;
+  const sPct = Math.round(100 * sLearned / sPool.length);
+  const sCard = document.createElement("div");
+  sCard.className = "cat-card starter-card";
+  sCard.innerHTML =
+    '<div class="cat-head"><span class="cat-icon">⭐</span>' +
+    '<span class="cat-name">Starter-Deck: das Wichtigste zuerst</span>' +
+    '<span class="cat-count">' + sPool.length + ' Einträge</span></div>' +
+    '<div class="bar"><div class="fill' + (sPct === 100 ? ' done' : '') + '" style="width:' + sPct + '%"></div></div>' +
+    '<div class="cat-status">' + sLearned + ' von ' + sPool.length + ' gelernt (' + sPct + '%)</div>';
+  sCard.addEventListener("click", () => showCatDetail("starter"));
+  grid.appendChild(sCard);
   CATS.forEach(cat => {
-    const learned = cat.words.filter((_, i) => known.has(cat.id + ":" + i)).length;
+    const learned = cat.words.filter((_, i) => isLearned(cat.id + ":" + i)).length;
+    const due = cat.words.filter((_, i) => isDue(cat.id + ":" + i)).length;
     const pct = Math.round(100 * learned / cat.words.length);
     const card = document.createElement("div");
     card.className = "cat-card";
@@ -823,27 +964,35 @@ function renderOverview() {
       '<span class="cat-name">' + cat.name + '</span>' +
       '<span class="cat-count">' + cat.words.length + ' Wörter</span></div>' +
       '<div class="bar"><div class="fill' + (pct === 100 ? ' done' : '') + '" style="width:' + pct + '%"></div></div>' +
-      '<div class="cat-status">' + learned + ' von ' + cat.words.length + ' gelernt (' + pct + '%)</div>';
+      '<div class="cat-status">' + learned + ' von ' + cat.words.length + ' gelernt (' + pct + '%)' +
+      (due > 0 ? ' · <span class="due-badge">' + due + ' fällig</span>' : '') + '</div>';
     card.addEventListener("click", () => showCatDetail(cat.id));
     grid.appendChild(card);
   });
 }
 
 function showCatDetail(catId) {
-  const cat = CATS.find(c => c.id === catId);
+  let icon, name, pool;
+  if (catId === "starter") {
+    icon = "⭐"; name = "Starter-Deck"; pool = poolFor("starter");
+  } else {
+    const cat = CATS.find(c => c.id === catId);
+    icon = cat.icon; name = cat.name; pool = poolFor(catId);
+  }
   $("ov-grid-wrap").style.display = "none";
   $("ov-detail").style.display = "block";
-  $("detailTitle").textContent = cat.icon + " " + cat.name;
+  $("detailTitle").textContent = icon + " " + name;
   const body = $("detailBody");
   body.innerHTML = "";
-  cat.words.forEach((w, i) => {
+  pool.forEach(w => {
     const tr = document.createElement("tr");
     tr.innerHTML =
-      '<td>' + (known.has(cat.id + ":" + i) ? '<span class="known-dot">✓</span>' : '') + '</td>' +
+      '<td>' + (isLearned(w.key) ? '<span class="known-dot">✓</span>' : '') + '</td>' +
       '<td>' + w.de + '</td>' +
-      '<td class="it">' + w.it + '</td>' +
+      '<td class="it" title="Anhören 🔊">' + w.it + '</td>' +
       '<td class="pr">' + (w.pr || "") + '</td>' +
       '<td class="note">' + (w.note || "") + '</td>';
+    tr.querySelector(".it").addEventListener("click", () => speakIt(w.it));
     body.appendChild(tr);
   });
 }
@@ -857,7 +1006,7 @@ function showOverviewGrid() {
 // ---------------- SELECTS ----------------
 function fillCatSelects() {
   [$("fcCat"), $("qzCat")].forEach(sel => {
-    sel.innerHTML = '<option value="all">Alle Kategorien</option>';
+    sel.innerHTML = '<option value="all">Alle Kategorien</option><option value="starter">⭐ Starter-Deck</option>';
     CATS.forEach(c => {
       const o = document.createElement("option");
       o.value = c.id;
@@ -868,18 +1017,38 @@ function fillCatSelects() {
 }
 
 function poolFor(catId) {
-  const cats = catId === "all" ? CATS : CATS.filter(c => c.id === catId);
   const pool = [];
+  if (catId === "starter") {
+    CATS.forEach(c => c.words.forEach((w, i) => { if (STARTER_IT.has(w.it)) pool.push({ ...w, key: c.id + ":" + i }); }));
+    return pool;
+  }
+  const cats = catId === "all" ? CATS : CATS.filter(c => c.id === catId);
   cats.forEach(c => c.words.forEach((w, i) => pool.push({ ...w, key: c.id + ":" + i })));
   return pool;
 }
 
 // ---------------- KARTEIKARTEN ----------------
-let fcQueue = [], fcCurrent = null, fcFlipped = false, fcDoneCount = 0, fcStartCount = 0;
+let fcQueue = [], fcCurrent = null, fcFlipped = false, fcDoneCount = 0, fcStartCount = 0, fcMode = "free";
 
 function startFlashcards() {
-  fcQueue = shuffle(poolFor($("fcCat").value));
-  fcStartCount = fcQueue.length;
+  startStack(shuffle(poolFor($("fcCat").value)), "free");
+}
+
+function startToday() {
+  const all = poolFor("all");
+  const due = shuffle(all.filter(w => isDue(w.key)));
+  const fresh = all.filter(w => !cards[w.key] || cards[w.key].box === 0);
+  // Neue Karten: Starter-Deck zuerst
+  const freshSorted = fresh.filter(w => STARTER_IT.has(w.it)).concat(fresh.filter(w => !STARTER_IT.has(w.it)));
+  const need = Math.max(0, DAILY_GOAL - due.length);
+  startStack(due.concat(freshSorted.slice(0, need)), "today");
+}
+
+function startStack(queue, mode) {
+  if (queue.length === 0) { return; }
+  fcQueue = queue;
+  fcMode = mode;
+  fcStartCount = queue.length;
   fcDoneCount = 0;
   $("fcDone").style.display = "none";
   $("fcStage").style.display = "block";
@@ -890,51 +1059,52 @@ function nextCard() {
   if (fcQueue.length === 0) {
     $("fcStage").style.display = "none";
     $("fcDone").style.display = "block";
-    $("fcDoneMsg").textContent = "Stapel geschafft — " + fcStartCount + " Karten durchgearbeitet.";
+    const goal = todayCount() >= DAILY_GOAL ? " Tagesziel erreicht! 🔥" : "";
+    $("fcDoneMsg").textContent = (fcMode === "today" ? "Tagespaket geschafft — " : "Stapel geschafft — ") + fcStartCount + " Karten durchgearbeitet." + goal;
     renderStats();
+    updateTodayInfo();
     return;
   }
   fcCurrent = fcQueue.shift();
   fcFlipped = false;
   $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten im Stapel · " + fcDoneCount + " geschafft";
-  $("fcLang").textContent = "Deutsch";
-  $("fcWord").textContent = fcCurrent.de;
-  $("fcPron").textContent = "";
-  $("fcNote").textContent = "";
-  $("fcHint").textContent = "Klicken zum Umdrehen";
-  $("fcActions").style.visibility = "hidden";
+  renderCardFace();
+}
+
+function renderCardFace() {
+  const frontIsIt = (dir === "itde");
+  const showIt = fcFlipped ? !frontIsIt : frontIsIt;  // welche Seite ist gerade sichtbar?
+  $("fcLang").textContent = showIt ? "Italienisch" : "Deutsch";
+  $("fcWord").textContent = showIt ? fcCurrent.it : fcCurrent.de;
+  $("fcPron").textContent = showIt && fcCurrent.pr ? "[" + fcCurrent.pr + "]" : "";
+  $("fcNote").textContent = fcFlipped ? (fcCurrent.note || "") : "";
+  $("fcHint").textContent = fcFlipped ? "" : "Klicken zum Umdrehen";
+  $("fcActions").style.visibility = fcFlipped ? "visible" : "hidden";
+  const sp = $("fcSpeak");
+  sp.style.display = showIt ? "block" : "none";
+  sp.onclick = (ev) => speakIt(fcCurrent.it, ev);
+  if (showIt && fcFlipped) speakIt(fcCurrent.it);  // Antwort automatisch vorlesen
 }
 
 function flipCard() {
   if (!fcCurrent) return;
   fcFlipped = !fcFlipped;
-  if (fcFlipped) {
-    $("fcLang").textContent = "Italienisch";
-    $("fcWord").textContent = fcCurrent.it;
-    $("fcPron").textContent = fcCurrent.pr ? "[" + fcCurrent.pr + "]" : "";
-    $("fcNote").textContent = fcCurrent.note || "";
-    $("fcHint").textContent = "";
-    $("fcActions").style.visibility = "visible";
-  } else {
-    $("fcLang").textContent = "Deutsch";
-    $("fcWord").textContent = fcCurrent.de;
-    $("fcPron").textContent = "";
-    $("fcNote").textContent = "";
-    $("fcHint").textContent = "Klicken zum Umdrehen";
-    $("fcActions").style.visibility = "hidden";
-  }
+  renderCardFace();
 }
 
 function fcKnown() {
-  known.add(fcCurrent.key);
-  saveState();
+  gradeKnown(fcCurrent.key);
   fcDoneCount++;
   renderStats();
+  updateTodayInfo();
   nextCard();
 }
 
 function fcAgain() {
+  gradeAgain(fcCurrent.key);
   fcQueue.push(fcCurrent);   // wieder hinten einreihen
+  renderStats();
+  updateTodayInfo();
   nextCard();
 }
 
@@ -958,8 +1128,14 @@ function startQuiz() {
 function renderQuestion() {
   qzAnswered = false;
   const q = qzQuestions[qzIndex];
+  const askIt = (dir === "itde");   // IT→DE: italienische Frage, deutsche Antworten
   $("qzCount").textContent = "Frage " + (qzIndex + 1) + " von " + qzQuestions.length;
-  $("qzPrompt").textContent = q.word.de;
+  $("qzPrompt").textContent = askIt ? q.word.it : q.word.de;
+  $("qzSub").textContent = askIt ? "Was bedeutet das?" : "Wie heißt das auf Italienisch?";
+  const sp = $("qzSpeak");
+  sp.style.display = askIt ? "block" : "none";
+  sp.onclick = (ev) => speakIt(q.word.it, ev);
+  if (askIt) speakIt(q.word.it);
   $("qzFeedback").innerHTML = "";
   $("qzNext").disabled = true;
   $("qzNext").textContent = qzIndex === qzQuestions.length - 1 ? "Ergebnis →" : "Weiter →";
@@ -968,7 +1144,7 @@ function renderQuestion() {
   q.options.forEach(opt => {
     const b = document.createElement("button");
     b.className = "quiz-opt";
-    b.textContent = opt.it;
+    b.textContent = askIt ? opt.de : opt.it;
     b.addEventListener("click", () => answer(b, opt, q));
     opts.appendChild(b);
   });
@@ -978,10 +1154,12 @@ function answer(btn, opt, q) {
   if (qzAnswered) return;
   qzAnswered = true;
   quizStats.asked++;
+  const askIt = (dir === "itde");
+  const correctText = askIt ? q.word.de : q.word.it;
   const correct = opt.key === q.word.key;
   document.querySelectorAll(".quiz-opt").forEach(b => {
     b.disabled = true;
-    if (b.textContent === q.word.it) b.classList.add("correct");
+    if (b.textContent === correctText) b.classList.add("correct");
   });
   if (correct) {
     qzCorrect++;
@@ -989,8 +1167,10 @@ function answer(btn, opt, q) {
     $("qzFeedback").innerHTML = '<span class="ok">✓ Richtig!</span>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
   } else {
     btn.classList.add("wrong");
-    $("qzFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + q.word.it + '</strong>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
+    $("qzFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + correctText + '</strong>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
   }
+  if (!askIt) { $("qzSpeak").style.display = "block"; }
+  speakIt(q.word.it);
   $("qzNext").disabled = false;
   saveState();
   renderStats();
@@ -1015,9 +1195,10 @@ function quizNext() {
 
 // ---------------- INIT ----------------
 loadState();
+saveState();   // Migration sofort festschreiben
 fillCatSelects();
 renderOverview();
-if (quizStats.asked > 0) renderStats();
+updateTodayInfo();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
