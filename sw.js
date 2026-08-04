@@ -1,4 +1,4 @@
-const CACHE = "italiano-v11";
+const CACHE = "italiano-v12";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-180.png", "./icon-192.png", "./icon-512.png", "./audio-it.mp3", "./audio-sprites.json"];
 
 self.addEventListener("install", e => {
