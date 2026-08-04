@@ -219,6 +219,7 @@
   .due-badge { color: var(--accent-deep); font-weight: 600; }
   .fc-level { font-size: 13px; color: var(--ink-2); margin-top: 10px; min-height: 18px; }
   .fc-level .dots { color: var(--accent-deep); letter-spacing: 2px; font-size: 14px; margin-right: 6px; }
+  .dots-sm { color: var(--accent-deep); font-size: 10px; letter-spacing: 1px; white-space: nowrap; }
   .word-table .it { cursor: pointer; }
   .starter-card { border: 1.5px solid var(--accent); }
 
@@ -287,8 +288,7 @@
     </div>
     <nav class="tabs">
       <button data-view="overview" class="active">Übersicht</button>
-      <button data-view="cards">Lernen</button>
-      <button data-view="quiz">Quiz</button>
+      <button data-view="cards">Übungen</button>
       <button data-view="verben">Verben</button>
     </nav>
   </div>
@@ -301,7 +301,7 @@
   <section class="view active" id="view-overview">
     <div id="ov-grid-wrap">
       <h2 class="view-title">Kategorien</h2>
-      <p class="view-sub">Klick auf eine Kategorie, um alle Wörter zu sehen. Der Fortschritt füllt sich, wenn du beim Lernen richtig antwortest.</p>
+      <p class="view-sub">Klick auf eine Kategorie, um alle Wörter zu sehen. Der Balken zeigt, wie viel du schon gemeistert hast — er füllt sich mit jeder richtigen Übungs-Antwort und jeder erreichten Stufe.</p>
       <div class="cat-grid" id="catGrid"></div>
     </div>
     <div id="ov-detail" style="display:none">
@@ -321,8 +321,8 @@
 
   <!-- KARTEIKARTEN -->
   <section class="view" id="view-cards">
-    <h2 class="view-title">Lernen</h2>
-    <p class="view-sub">Wie im Quiz: Antwort antippen. Richtig → die Vokabel steigt eine Stufe (Wiederholung nach 1 → 3 → 7 → 14 Tagen). Falsch → zurück auf Stufe 1, sie kommt gleich noch einmal.</p>
+    <h2 class="view-title">Übungen</h2>
+    <p class="view-sub">Antwort antippen — jede Übung zählt für deinen Fortschritt. Richtig → die Vokabel steigt eine Stufe (Wiederholung nach 1 → 3 → 7 → 14 Tagen). Falsch → zurück auf Stufe 1, sie kommt gleich noch einmal.</p>
     <div class="today-box">
       <div class="ti"><b>🔥 Heute lernen</b><div class="sub2" id="todayInfo"></div></div>
       <button class="btn primary" onclick="startToday()">Los geht's</button>
@@ -349,35 +349,6 @@
         <div class="fc-word">Bravissimo! 🎉</div>
         <div class="fc-done-msg" id="fcDoneMsg"></div>
         <button class="btn primary" onclick="startToday()">Neuer Durchgang</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- QUIZ -->
-  <section class="view" id="view-quiz">
-    <h2 class="view-title">Quiz</h2>
-    <p class="view-sub">10 Fragen, vier Antwortmöglichkeiten — Richtung frei wählbar.</p>
-    <div class="controls">
-      <span class="seg"><button class="dir-btn on" data-dir="deit" onclick="setDir('deit')">DE → IT</button><button class="dir-btn" data-dir="itde" onclick="setDir('itde')">IT → DE</button></span>
-      <label for="qzCat" style="font-size:14px;color:var(--ink-2)">Kategorie:</label>
-      <select id="qzCat"></select>
-      <button class="btn primary" onclick="startQuiz()">Quiz starten</button>
-    </div>
-    <div class="quiz-stage" id="qzStage" style="display:none">
-      <div class="quiz-q">
-        <div class="quiz-count" id="qzCount"></div>
-        <div style="display:flex;align-items:center;gap:10px"><div class="quiz-prompt" id="qzPrompt"></div><button class="speak-btn" id="qzSpeak" style="display:none" title="Anhören">🔊</button></div>
-        <div class="quiz-sub" id="qzSub">Wie heißt das auf Italienisch?</div>
-        <div class="quiz-opts" id="qzOpts"></div>
-        <div class="quiz-feedback" id="qzFeedback"></div>
-        <div class="quiz-next-row"><button class="btn" id="qzNext" onclick="quizNext()" disabled>Weiter →</button></div>
-      </div>
-    </div>
-    <div class="quiz-stage" id="qzResult" style="display:none">
-      <div class="quiz-q quiz-result">
-        <div class="big" id="qzScore"></div>
-        <div class="msg" id="qzMsg"></div>
-        <div style="margin-top:18px"><button class="btn primary" onclick="startQuiz()">Noch ein Quiz</button></div>
       </div>
     </div>
   </section>
@@ -771,6 +742,84 @@ const CATS = [
       {de:"Wie viel kostet das?", it:"Quanto costa?", pr:"KUAN-to KOS-ta"},
       {de:"Ich zahle / Ich lade dich ein", it:"Pago io / Offro io", pr:"PA-go I-o / OF-fro I-o", note:"„Offro io“ = ich lade ein — kommt in Italien gut an!"}
     ]
+  },
+  {
+    id: "grund", icon: "🔤", name: "Grundwortschatz: kleine Wörter",
+    words: [
+      {de:"und / oder / aber", it:"e / o / ma", pr:"e / o / ma"},
+      {de:"auch", it:"anche", pr:"AN-ke"},
+      {de:"mit / ohne", it:"con / senza", pr:"kon / SEN-tsa"},
+      {de:"für", it:"per", pr:"per"},
+      {de:"weil", it:"perché", pr:"per-KE", note:"dasselbe Wort wie „warum“!"},
+      {de:"hier / dort", it:"qui / lì", pr:"kui / li"},
+      {de:"viel / wenig", it:"molto / poco", pr:"MOL-to / PO-ko"},
+      {de:"mehr / weniger", it:"più / meno", pr:"pju / ME-no"},
+      {de:"groß / klein", it:"grande / piccolo", pr:"GRAN-de / PIK-ko-lo"},
+      {de:"neu / alt", it:"nuovo / vecchio", pr:"NUO-wo / WEK-kjo"},
+      {de:"schön / hässlich", it:"bello / brutto", pr:"BEL-lo / BRUT-to"},
+      {de:"gut / schlecht", it:"buono / cattivo", pr:"BUO-no / kat-TI-wo"},
+      {de:"warm / kalt", it:"caldo / freddo", pr:"KAL-do / FRED-do", note:"Achtung: caldo heißt warm, nicht kalt!"},
+      {de:"schnell / langsam", it:"veloce / lento", pr:"we-LO-tsche / LEN-to"},
+      {de:"leicht / schwierig", it:"facile / difficile", pr:"FA-tschi-le / dif-FI-tschi-le"},
+      {de:"der erste / der letzte", it:"il primo / l'ultimo", pr:"il PRI-mo / LUL-ti-mo"},
+      {de:"ein anderer / derselbe", it:"un altro / lo stesso", pr:"un AL-tro / lo STES-so"},
+      {de:"alle / niemand", it:"tutti / nessuno", pr:"TUT-ti / nes-SU-no"},
+      {de:"offen / geschlossen", it:"aperto / chiuso", pr:"a-PER-to / KJU-so"},
+      {de:"richtig / falsch", it:"giusto / sbagliato", pr:"DSCHUS-to / sbal-JA-to"},
+      {de:"bereit / fertig", it:"pronto", pr:"PRON-to", note:"„Pronto?“ sagt man auch am Telefon statt „Hallo?“"},
+      {de:"zusammen / allein", it:"insieme / da solo", pr:"in-SJE-me / da SO-lo"},
+      {de:"vor / nach (zeitlich)", it:"prima di / dopo", pr:"PRI-ma di / DO-po"},
+      {de:"über / unter", it:"sopra / sotto", pr:"SO-pra / SOT-to"},
+      {de:"drinnen / draußen", it:"dentro / fuori", pr:"DEN-tro / FUO-ri"}
+    ]
+  },
+  {
+    id: "zeit", icon: "📅", name: "Wochentage, Zahlen & Uhrzeit",
+    words: [
+      {de:"elf, zwölf, dreizehn", it:"undici, dodici, tredici", pr:"UN-di-tschi, DO-di-tschi, TRE-di-tschi"},
+      {de:"vierzehn, fünfzehn, sechzehn", it:"quattordici, quindici, sedici", pr:"kuat-TOR-di-tschi, KUIN-di-tschi, SE-di-tschi"},
+      {de:"siebzehn, achtzehn, neunzehn", it:"diciassette, diciotto, diciannove", pr:"di-tschas-SET-te, di-TSCHOT-to, di-tschan-NO-we"},
+      {de:"zwanzig, einundzwanzig", it:"venti, ventuno", pr:"WEN-ti, wen-TU-no"},
+      {de:"dreißig, vierzig, fünfzig", it:"trenta, quaranta, cinquanta", pr:"TREN-ta, kua-RAN-ta, tschin-KUAN-ta"},
+      {de:"sechzig, siebzig, achtzig", it:"sessanta, settanta, ottanta", pr:"ses-SAN-ta, set-TAN-ta, ot-TAN-ta"},
+      {de:"neunzig, hundert", it:"novanta, cento", pr:"no-WAN-ta, TSCHEN-to"},
+      {de:"Montag, Dienstag, Mittwoch", it:"lunedì, martedì, mercoledì", pr:"lu-ne-DI, mar-te-DI, mer-ko-le-DI"},
+      {de:"Donnerstag, Freitag", it:"giovedì, venerdì", pr:"dscho-we-DI, we-ner-DI"},
+      {de:"Samstag, Sonntag", it:"sabato, domenica", pr:"SA-ba-to, do-ME-ni-ka"},
+      {de:"Woche / Monat / Jahr", it:"la settimana / il mese / l'anno", pr:"set-ti-MA-na / ME-se / AN-no"},
+      {de:"Morgen / Nachmittag", it:"la mattina / il pomeriggio", pr:"mat-TI-na / po-me-RID-dscho"},
+      {de:"Abend / Nacht", it:"la sera / la notte", pr:"SE-ra / NOT-te"},
+      {de:"Wie spät ist es?", it:"Che ore sono?", pr:"ke O-re SO-no"},
+      {de:"Es ist drei Uhr", it:"Sono le tre", pr:"SO-no le tre"},
+      {de:"halb neun", it:"le otto e mezza", pr:"le OT-to e MED-dsa", note:"wörtlich „acht und halb“ — wie im Englischen!"},
+      {de:"Viertel nach / Viertel vor", it:"e un quarto / meno un quarto", pr:"e un KUAR-to / ME-no un KUAR-to"},
+      {de:"Mittag / Mitternacht", it:"mezzogiorno / mezzanotte", pr:"med-dso-DSCHOR-no / med-dsa-NOT-te"},
+      {de:"früh / spät", it:"presto / tardi", pr:"PRES-to / TAR-di"},
+      {de:"am Wochenende", it:"nel fine settimana", pr:"nel FI-ne set-ti-MA-na"},
+      {de:"jeden Tag", it:"ogni giorno", pr:"ON-ji DSCHOR-no"},
+      {de:"nächste Woche", it:"la settimana prossima", pr:"set-ti-MA-na PROS-si-ma"}
+    ]
+  },
+  {
+    id: "leute", icon: "👋", name: "Leute & Familie",
+    words: [
+      {de:"die Familie", it:"la famiglia", pr:"la fa-MIL-ja"},
+      {de:"Ehemann / Ehefrau", it:"il marito / la moglie", pr:"ma-RI-to / MOL-je"},
+      {de:"Sohn / Tochter", it:"il figlio / la figlia", pr:"FIL-jo / FIL-ja"},
+      {de:"die Eltern", it:"i genitori", pr:"i dsche-ni-TO-ri"},
+      {de:"Bruder / Schwester", it:"il fratello / la sorella", pr:"fra-TEL-lo / so-REL-la"},
+      {de:"Freund / Freundin", it:"l'amico / l'amica", pr:"la-MI-ko / la-MI-ka"},
+      {de:"Junge / Mädchen", it:"il ragazzo / la ragazza", pr:"ra-GAT-tso / ra-GAT-tsa"},
+      {de:"Mann / Frau", it:"l'uomo / la donna", pr:"LUO-mo / la DON-na"},
+      {de:"die Kinder", it:"i bambini", pr:"i bam-BI-ni"},
+      {de:"Herr / Frau (Anrede)", it:"signore / signora", pr:"sin-JO-re / sin-JO-ra"},
+      {de:"Ich heiße Marcel", it:"Mi chiamo Marcel", pr:"mi KJA-mo"},
+      {de:"Wie heißt du?", it:"Come ti chiami?", pr:"KO-me ti KJA-mi"},
+      {de:"Woher kommst du?", it:"Di dove sei?", pr:"di DO-we sei"},
+      {de:"Ich komme aus Deutschland", it:"Vengo dalla Germania", pr:"WEN-go DAL-la dscher-MA-nja", note:"„Sono tedesco“ = ich bin Deutscher"},
+      {de:"Wie alt bist du?", it:"Quanti anni hai?", pr:"KUAN-ti AN-ni ai"},
+      {de:"Ich bin … Jahre alt", it:"Ho … anni", pr:"o … AN-ni", note:"wörtlich „ich HABE … Jahre“ — mit avere!"}
+    ]
   }
 ];
 
@@ -779,7 +828,6 @@ const LS_KEY = "italiano-allenamento-v1";
 const DAILY_GOAL = 20;
 const INTERVALS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30 };  // Box → Tage bis zur Wiederholung
 let cards = {};                       // "catId:index" → { box, due }
-let quizStats = { asked: 0, correct: 0 };
 let daily = {};                       // "YYYY-MM-DD" → gelernte Karten
 let dir = "deit";                     // "deit" = DE→IT, "itde" = IT→DE
 
@@ -797,19 +845,17 @@ function loadState() {
       (s.known || []).forEach(k => { cards[k] = { box: 3, due: todayStr(0) }; });
     }
     if (s.cards) cards = s.cards;
-    if (s.quizStats) quizStats = s.quizStats;
     if (s.daily) daily = s.daily;
   } catch (e) { /* Speicherung nicht verfügbar — App läuft trotzdem */ }
 }
 function saveState() {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ cards, quizStats, daily }));
+    localStorage.setItem(LS_KEY, JSON.stringify({ cards, daily }));
   } catch (e) { /* ignorieren */ }
 }
 function resetProgress() {
   if (!confirm("Gesamten Fortschritt zurücksetzen?")) return;
   cards = {};
-  quizStats = { asked: 0, correct: 0 };
   daily = {};
   try { localStorage.removeItem(LS_KEY); } catch (e) {}
   renderOverview();
@@ -964,24 +1010,38 @@ function renderOverview() {
   updateTodayInfo();
   const grid = $("catGrid");
   grid.innerHTML = "";
+  // Kennzahlen pro Wortliste: Ø-Stufe und Meisterungsgrad (Summe der Stufen / Maximum)
+  function poolMetrics(pool) {
+    let sum = 0, learned = 0, due = 0;
+    pool.forEach(w => {
+      const box = cards[w.key] ? cards[w.key].box : 0;
+      sum += box;
+      if (box >= 1) learned++;
+      if (isDue(w.key)) due++;
+    });
+    return {
+      learned, due,
+      pct: Math.round(100 * sum / (5 * pool.length)),
+      avg: (sum / pool.length).toFixed(1).replace(".", ",")
+    };
+  }
   // Starter-Deck als erste Karte
   const sPool = poolFor("starter");
-  const sLearned = sPool.filter(w => isLearned(w.key)).length;
-  const sPct = Math.round(100 * sLearned / sPool.length);
+  const sm = poolMetrics(sPool);
   const sCard = document.createElement("div");
   sCard.className = "cat-card starter-card";
   sCard.innerHTML =
     '<div class="cat-head"><span class="cat-icon">⭐</span>' +
     '<span class="cat-name">Starter-Deck: das Wichtigste zuerst</span>' +
     '<span class="cat-count">' + sPool.length + ' Einträge</span></div>' +
-    '<div class="bar"><div class="fill' + (sPct === 100 ? ' done' : '') + '" style="width:' + sPct + '%"></div></div>' +
-    '<div class="cat-status">' + sLearned + ' von ' + sPool.length + ' gelernt (' + sPct + '%)</div>';
+    '<div class="bar"><div class="fill' + (sm.pct === 100 ? ' done' : '') + '" style="width:' + sm.pct + '%"></div></div>' +
+    '<div class="cat-status">' + sm.learned + ' von ' + sPool.length + ' geübt · Ø Stufe ' + sm.avg + ' · ' + sm.pct + '% gemeistert' +
+    (sm.due > 0 ? ' · <span class="due-badge">' + sm.due + ' fällig</span>' : '') + '</div>';
   sCard.addEventListener("click", () => showCatDetail("starter"));
   grid.appendChild(sCard);
   CATS.forEach(cat => {
-    const learned = cat.words.filter((_, i) => isLearned(cat.id + ":" + i)).length;
-    const due = cat.words.filter((_, i) => isDue(cat.id + ":" + i)).length;
-    const pct = Math.round(100 * learned / cat.words.length);
+    const m = poolMetrics(poolFor(cat.id));
+    const learned = m.learned, due = m.due, pct = m.pct;
     const card = document.createElement("div");
     card.className = "cat-card";
     card.innerHTML =
@@ -989,7 +1049,7 @@ function renderOverview() {
       '<span class="cat-name">' + cat.name + '</span>' +
       '<span class="cat-count">' + cat.words.length + ' Wörter</span></div>' +
       '<div class="bar"><div class="fill' + (pct === 100 ? ' done' : '') + '" style="width:' + pct + '%"></div></div>' +
-      '<div class="cat-status">' + learned + ' von ' + cat.words.length + ' gelernt (' + pct + '%)' +
+      '<div class="cat-status">' + learned + ' von ' + cat.words.length + ' geübt · Ø Stufe ' + m.avg + ' · ' + pct + '% gemeistert' +
       (due > 0 ? ' · <span class="due-badge">' + due + ' fällig</span>' : '') + '</div>';
     card.addEventListener("click", () => showCatDetail(cat.id));
     grid.appendChild(card);
@@ -1010,9 +1070,10 @@ function showCatDetail(catId) {
   const body = $("detailBody");
   body.innerHTML = "";
   pool.forEach(w => {
+    const box = cards[w.key] ? cards[w.key].box : 0;
     const tr = document.createElement("tr");
     tr.innerHTML =
-      '<td>' + (isLearned(w.key) ? '<span class="known-dot">✓</span>' : '') + '</td>' +
+      '<td title="Stufe ' + box + ' von 5">' + (box > 0 ? '<span class="dots-sm">' + "●".repeat(box) + '</span>' : '') + '</td>' +
       '<td>' + w.de + '</td>' +
       '<td class="it" title="Anhören 🔊">' + w.it + '</td>' +
       '<td class="pr">' + (w.pr || "") + '</td>' +
@@ -1030,14 +1091,13 @@ function showOverviewGrid() {
 
 // ---------------- SELECTS ----------------
 function fillCatSelects() {
-  [$("fcCat"), $("qzCat")].forEach(sel => {
-    sel.innerHTML = '<option value="all">Alle Kategorien</option><option value="starter">⭐ Starter-Deck</option>';
-    CATS.forEach(c => {
-      const o = document.createElement("option");
-      o.value = c.id;
-      o.textContent = c.icon + " " + c.name;
-      sel.appendChild(o);
-    });
+  const sel = $("fcCat");
+  sel.innerHTML = '<option value="all">Alle Kategorien</option><option value="starter">⭐ Starter-Deck</option>';
+  CATS.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c.id;
+    o.textContent = c.icon + " " + c.name;
+    sel.appendChild(o);
   });
 }
 
@@ -1166,91 +1226,6 @@ function answerFc(btn, opt) {
   playKey(fcCurrent.key, fcCurrent.it);
   renderStats();
   updateTodayInfo();
-}
-
-// ---------------- QUIZ ----------------
-let qzQuestions = [], qzIndex = 0, qzCorrect = 0, qzAnswered = false;
-
-function startQuiz() {
-  const pool = poolFor($("qzCat").value);
-  const n = Math.min(10, pool.length);
-  qzQuestions = shuffle(pool).slice(0, n).map(w => {
-    const distractors = shuffle(pool.filter(x => x.key !== w.key)).slice(0, 3);
-    return { word: w, options: shuffle([w, ...distractors]) };
-  });
-  qzIndex = 0;
-  qzCorrect = 0;
-  $("qzResult").style.display = "none";
-  $("qzStage").style.display = "block";
-  renderQuestion();
-}
-
-function renderQuestion() {
-  qzAnswered = false;
-  const q = qzQuestions[qzIndex];
-  const askIt = (dir === "itde");   // IT→DE: italienische Frage, deutsche Antworten
-  $("qzCount").textContent = "Frage " + (qzIndex + 1) + " von " + qzQuestions.length;
-  $("qzPrompt").textContent = askIt ? q.word.it : q.word.de;
-  $("qzSub").textContent = askIt ? "Was bedeutet das?" : "Wie heißt das auf Italienisch?";
-  const sp = $("qzSpeak");
-  sp.style.display = askIt ? "block" : "none";
-  sp.onclick = (ev) => playKey(q.word.key, q.word.it, ev);
-  if (askIt) playKey(q.word.key, q.word.it);
-  $("qzFeedback").innerHTML = "";
-  $("qzNext").disabled = true;
-  $("qzNext").textContent = qzIndex === qzQuestions.length - 1 ? "Ergebnis →" : "Weiter →";
-  const opts = $("qzOpts");
-  opts.innerHTML = "";
-  q.options.forEach(opt => {
-    const b = document.createElement("button");
-    b.className = "quiz-opt";
-    b.textContent = askIt ? opt.de : opt.it;
-    b.addEventListener("click", () => answer(b, opt, q));
-    opts.appendChild(b);
-  });
-}
-
-function answer(btn, opt, q) {
-  if (qzAnswered) return;
-  qzAnswered = true;
-  quizStats.asked++;
-  const askIt = (dir === "itde");
-  const correctText = askIt ? q.word.de : q.word.it;
-  const correct = opt.key === q.word.key;
-  document.querySelectorAll(".quiz-opt").forEach(b => {
-    b.disabled = true;
-    if (b.textContent === correctText) b.classList.add("correct");
-  });
-  if (correct) {
-    qzCorrect++;
-    quizStats.correct++;
-    $("qzFeedback").innerHTML = '<span class="ok">✓ Richtig!</span>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
-  } else {
-    btn.classList.add("wrong");
-    $("qzFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + correctText + '</strong>' + (q.word.pr ? ' <span style="color:var(--muted)">[' + q.word.pr + ']</span>' : '');
-  }
-  if (!askIt) { $("qzSpeak").style.display = "block"; $("qzSpeak").onclick = (ev) => playKey(q.word.key, q.word.it, ev); }
-  playKey(q.word.key, q.word.it);
-  $("qzNext").disabled = false;
-  saveState();
-  renderStats();
-}
-
-function quizNext() {
-  qzIndex++;
-  if (qzIndex >= qzQuestions.length) {
-    $("qzStage").style.display = "none";
-    $("qzResult").style.display = "block";
-    $("qzScore").textContent = qzCorrect + " / " + qzQuestions.length;
-    const pct = qzCorrect / qzQuestions.length;
-    $("qzMsg").textContent =
-      pct === 1 ? "Perfetto! Sei bravissimo! 🏆" :
-      pct >= 0.8 ? "Molto bene! Fast alles richtig." :
-      pct >= 0.5 ? "Bene — dranbleiben, das wird!" :
-      "Ancora una volta — nimm die Karteikarten zur Hilfe!";
-  } else {
-    renderQuestion();
-  }
 }
 
 // ---------------- INIT ----------------
