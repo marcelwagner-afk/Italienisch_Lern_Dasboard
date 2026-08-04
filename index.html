@@ -217,6 +217,8 @@
   .speak-btn:hover { background: var(--accent-soft); }
   .fc-card .speak-btn { position: absolute; top: 12px; right: 14px; }
   .due-badge { color: var(--accent-deep); font-weight: 600; }
+  .fc-level { font-size: 13px; color: var(--ink-2); margin-top: 10px; min-height: 18px; }
+  .fc-level .dots { color: var(--accent-deep); letter-spacing: 2px; font-size: 14px; margin-right: 6px; }
   .word-table .it { cursor: pointer; }
   .starter-card { border: 1.5px solid var(--accent); }
 
@@ -285,7 +287,7 @@
     </div>
     <nav class="tabs">
       <button data-view="overview" class="active">Übersicht</button>
-      <button data-view="cards">Karteikarten</button>
+      <button data-view="cards">Lernen</button>
       <button data-view="quiz">Quiz</button>
       <button data-view="verben">Verben</button>
     </nav>
@@ -299,7 +301,7 @@
   <section class="view active" id="view-overview">
     <div id="ov-grid-wrap">
       <h2 class="view-title">Kategorien</h2>
-      <p class="view-sub">Klick auf eine Kategorie, um alle Wörter zu sehen. Der Fortschritt füllt sich, wenn du Karteikarten mit „Wusste ich“ markierst.</p>
+      <p class="view-sub">Klick auf eine Kategorie, um alle Wörter zu sehen. Der Fortschritt füllt sich, wenn du beim Lernen richtig antwortest.</p>
       <div class="cat-grid" id="catGrid"></div>
     </div>
     <div id="ov-detail" style="display:none">
@@ -319,8 +321,8 @@
 
   <!-- KARTEIKARTEN -->
   <section class="view" id="view-cards">
-    <h2 class="view-title">Karteikarten</h2>
-    <p class="view-sub">Karte anklicken zum Umdrehen. „Nochmal“ legt die Karte zurück in den Stapel — und sie kommt morgen wieder. „Wusste ich“ verlängert den Abstand: 1 → 3 → 7 → 14 Tage.</p>
+    <h2 class="view-title">Lernen</h2>
+    <p class="view-sub">Wie im Quiz: Antwort antippen. Richtig → die Vokabel steigt eine Stufe (Wiederholung nach 1 → 3 → 7 → 14 Tagen). Falsch → zurück auf Stufe 1, sie kommt gleich noch einmal.</p>
     <div class="today-box">
       <div class="ti"><b>🔥 Heute lernen</b><div class="sub2" id="todayInfo"></div></div>
       <button class="btn primary" onclick="startToday()">Los geht's</button>
@@ -331,26 +333,22 @@
       <select id="fcCat"></select>
       <button class="btn" onclick="startFlashcards()">Stapel starten</button>
     </div>
-    <div class="fc-stage" id="fcStage" style="display:none">
-      <div class="fc-progress" id="fcProgress"></div>
-      <div class="fc-card" id="fcCard" onclick="flipCard()">
-        <div class="fc-lang" id="fcLang">Deutsch</div>
-        <button class="speak-btn" id="fcSpeak" style="display:none" title="Anhören">🔊</button>
-        <div class="fc-word" id="fcWord"></div>
-        <div class="fc-pron" id="fcPron"></div>
-        <div class="fc-note" id="fcNote"></div>
-        <div class="fc-hint" id="fcHint">Klicken zum Umdrehen</div>
-      </div>
-      <div class="fc-actions" id="fcActions" style="visibility:hidden">
-        <button class="btn" onclick="fcAgain()">↻ Nochmal</button>
-        <button class="btn good" onclick="fcKnown()">✓ Wusste ich</button>
+    <div class="quiz-stage" id="fcStage" style="display:none">
+      <div class="quiz-q">
+        <div class="quiz-count" id="fcProgress"></div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="quiz-prompt" id="fcPrompt"></div><button class="speak-btn" id="fcSpeak" style="display:none" title="Anhören">🔊</button></div>
+        <div class="quiz-sub" id="fcSub"></div>
+        <div class="quiz-opts" id="fcOpts"></div>
+        <div class="quiz-feedback" id="fcFeedback"></div>
+        <div class="fc-level" id="fcLevel"></div>
+        <div class="quiz-next-row"><button class="btn" id="fcNext" onclick="nextCard()" style="display:none">Weiter →</button></div>
       </div>
     </div>
     <div class="fc-stage" id="fcDone" style="display:none">
       <div class="fc-card" style="cursor:default">
         <div class="fc-word">Bravissimo! 🎉</div>
         <div class="fc-done-msg" id="fcDoneMsg"></div>
-        <button class="btn primary" onclick="startFlashcards()">Neuer Durchgang</button>
+        <button class="btn primary" onclick="startToday()">Neuer Durchgang</button>
       </div>
     </div>
   </section>
@@ -899,7 +897,7 @@ function speakIt(text, ev) {
 function setDir(d) {
   dir = d;
   document.querySelectorAll(".dir-btn").forEach(b => b.classList.toggle("on", b.dataset.dir === d));
-  if (fcCurrent) renderCardFace();
+  if (fcCurrent && !fcAnswered && $("fcStage").style.display !== "none") renderFcQuestion();
 }
 
 // ---------------- STARTER-DECK: die wichtigsten Einträge ----------------
@@ -1054,11 +1052,13 @@ function poolFor(catId) {
   return pool;
 }
 
-// ---------------- KARTEIKARTEN ----------------
-let fcQueue = [], fcCurrent = null, fcFlipped = false, fcDoneCount = 0, fcStartCount = 0, fcMode = "free";
+// ---------------- LERNEN (Quiz-Stil mit Lernstufen) ----------------
+let fcQueue = [], fcCurrent = null, fcStartCount = 0, fcRight = 0, fcWrong = 0,
+    fcMode = "free", fcAnswered = false, fcAutoTimer = null, fcPool = [], fcSeen = new Set();
 
 function startFlashcards() {
-  startStack(shuffle(poolFor($("fcCat").value)), "free");
+  const pool = poolFor($("fcCat").value);
+  startStack(shuffle(pool), "free", pool);
 }
 
 function startToday() {
@@ -1068,71 +1068,104 @@ function startToday() {
   // Neue Karten: Starter-Deck zuerst
   const freshSorted = fresh.filter(w => STARTER_IT.has(w.it)).concat(fresh.filter(w => !STARTER_IT.has(w.it)));
   const need = Math.max(0, DAILY_GOAL - due.length);
-  startStack(due.concat(freshSorted.slice(0, need)), "today");
+  startStack(due.concat(freshSorted.slice(0, need)), "today", all);
 }
 
-function startStack(queue, mode) {
+function startStack(queue, mode, pool) {
   if (queue.length === 0) { return; }
-  fcQueue = queue;
+  fcQueue = queue.slice();
   fcMode = mode;
+  fcPool = pool && pool.length >= 4 ? pool : poolFor("all");
   fcStartCount = queue.length;
-  fcDoneCount = 0;
+  fcRight = 0; fcWrong = 0;
+  fcSeen = new Set();
   $("fcDone").style.display = "none";
   $("fcStage").style.display = "block";
   nextCard();
 }
 
 function nextCard() {
+  clearTimeout(fcAutoTimer);
   if (fcQueue.length === 0) {
     $("fcStage").style.display = "none";
     $("fcDone").style.display = "block";
     const goal = todayCount() >= DAILY_GOAL ? " Tagesziel erreicht! 🔥" : "";
-    $("fcDoneMsg").textContent = (fcMode === "today" ? "Tagespaket geschafft — " : "Stapel geschafft — ") + fcStartCount + " Karten durchgearbeitet." + goal;
+    const quote = fcRight + fcWrong > 0 ? " " + fcRight + " von " + (fcRight + fcWrong) + " beim ersten Versuch richtig." : "";
+    $("fcDoneMsg").textContent = (fcMode === "today" ? "Tagespaket geschafft!" : "Stapel geschafft!") + quote + goal;
     renderStats();
     updateTodayInfo();
     return;
   }
   fcCurrent = fcQueue.shift();
-  fcFlipped = false;
-  $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten im Stapel · " + fcDoneCount + " geschafft";
-  renderCardFace();
+  fcAnswered = false;
+  renderFcQuestion();
 }
 
-function renderCardFace() {
-  const frontIsIt = (dir === "itde");
-  const showIt = fcFlipped ? !frontIsIt : frontIsIt;  // welche Seite ist gerade sichtbar?
-  $("fcLang").textContent = showIt ? "Italienisch" : "Deutsch";
-  $("fcWord").textContent = showIt ? fcCurrent.it : fcCurrent.de;
-  $("fcPron").textContent = showIt && fcCurrent.pr ? "[" + fcCurrent.pr + "]" : "";
-  $("fcNote").textContent = fcFlipped ? (fcCurrent.note || "") : "";
-  $("fcHint").textContent = fcFlipped ? "" : "Klicken zum Umdrehen";
-  $("fcActions").style.visibility = fcFlipped ? "visible" : "hidden";
+function renderFcQuestion() {
+  const askIt = (dir === "itde");
+  $("fcProgress").textContent = "Noch " + (fcQueue.length + 1) + " Karten · " + fcRight + " richtig" + (fcWrong > 0 ? " · " + fcWrong + " nochmal" : "");
+  $("fcPrompt").textContent = askIt ? fcCurrent.it : fcCurrent.de;
+  $("fcSub").textContent = askIt ? "Was bedeutet das?" : "Wie heißt das auf Italienisch?";
   const sp = $("fcSpeak");
-  sp.style.display = showIt ? "block" : "none";
+  sp.style.display = askIt ? "block" : "none";
   sp.onclick = (ev) => playKey(fcCurrent.key, fcCurrent.it, ev);
-  if (showIt && fcFlipped) playKey(fcCurrent.key, fcCurrent.it);  // Antwort automatisch vorlesen
+  if (askIt) playKey(fcCurrent.key, fcCurrent.it);
+  $("fcFeedback").innerHTML = "";
+  $("fcLevel").innerHTML = "";
+  $("fcNext").style.display = "none";
+  const distractors = shuffle(fcPool.filter(x => x.key !== fcCurrent.key)).slice(0, 3);
+  const options = shuffle([fcCurrent, ...distractors]);
+  const opts = $("fcOpts");
+  opts.innerHTML = "";
+  options.forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "quiz-opt";
+    b.textContent = askIt ? opt.de : opt.it;
+    b.addEventListener("click", () => answerFc(b, opt));
+    opts.appendChild(b);
+  });
 }
 
-function flipCard() {
-  if (!fcCurrent) return;
-  fcFlipped = !fcFlipped;
-  renderCardFace();
+function levelHtml(key, wrong) {
+  const box = cards[key] ? cards[key].box : 0;
+  const dots = "●".repeat(box) + "○".repeat(Math.max(0, 5 - box));
+  const info = wrong
+    ? "zurück auf Stufe 1 — kommt gleich noch einmal"
+    : "Stufe " + box + " von 5 · nächste Wiederholung in " + (INTERVALS[box] || 30) + (INTERVALS[box] === 1 ? " Tag" : " Tagen");
+  return '<span class="dots">' + dots + '</span>' + info;
 }
 
-function fcKnown() {
-  gradeKnown(fcCurrent.key);
-  fcDoneCount++;
+function answerFc(btn, opt) {
+  if (fcAnswered) return;
+  fcAnswered = true;
+  const askIt = (dir === "itde");
+  const correctText = askIt ? fcCurrent.de : fcCurrent.it;
+  const correct = opt.key === fcCurrent.key;
+  document.querySelectorAll("#fcOpts .quiz-opt").forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correctText) b.classList.add("correct");
+  });
+  const firstTry = !fcSeen.has(fcCurrent.key);
+  fcSeen.add(fcCurrent.key);
+  if (correct) {
+    if (firstTry) fcRight++;
+    gradeKnown(fcCurrent.key);
+    $("fcFeedback").innerHTML = '<span class="ok">✓ Richtig!</span>' + (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') + (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
+    $("fcLevel").innerHTML = levelHtml(fcCurrent.key, false);
+    fcAutoTimer = setTimeout(nextCard, 1400);   // automatisch weiter
+    $("fcNext").style.display = "inline-block";
+  } else {
+    if (firstTry) fcWrong++;
+    btn.classList.add("wrong");
+    gradeAgain(fcCurrent.key);
+    $("fcFeedback").innerHTML = '<span class="no">✗ Leider nein.</span> Richtig ist: <strong>' + correctText + '</strong>' + (fcCurrent.pr ? ' <span style="color:var(--muted)">[' + fcCurrent.pr + ']</span>' : '') + (fcCurrent.note ? '<br><span style="color:var(--ink-2)">' + fcCurrent.note + '</span>' : '');
+    $("fcLevel").innerHTML = levelHtml(fcCurrent.key, true);
+    fcQueue.splice(Math.min(3, fcQueue.length), 0, fcCurrent);   // kommt bald wieder
+    $("fcNext").style.display = "inline-block";
+  }
+  playKey(fcCurrent.key, fcCurrent.it);
   renderStats();
   updateTodayInfo();
-  nextCard();
-}
-
-function fcAgain() {
-  gradeAgain(fcCurrent.key);
-  fcQueue.push(fcCurrent);   // wieder hinten einreihen
-  renderStats();
-  updateTodayInfo();
-  nextCard();
 }
 
 // ---------------- QUIZ ----------------
